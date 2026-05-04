@@ -31,7 +31,7 @@ const Application: React.FC = () => {
         <Stack.Screen name="UserList" component={UserList} options={({navigation}) => ({
           title: "User List",
           headerRight: () => (
-            <TouchableOpacity style={{marginRight: 16}} onPress={() => navigation.navigate("UserForm", {user: createDefaultUser(), mode: "create"})}>
+            <TouchableOpacity onPress={() => navigation.navigate("UserForm", {user: createDefaultUser(), mode: "create"})}>
               <FontAwesome5 name="plus" size={24} color="#007AFF"/>
             </TouchableOpacity>
           )

@@ -111,12 +111,13 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   function email() {
     return (<TextInput style={styles.input} placeholder="Email" value={user?.email}
+                       autoCapitalize="none" autoCorrect={false}
                        onChangeText={(value) => onChange("email", value)} keyboardType="email-address"/>);
   }
 
   function username() {
     return (<TextInput style={[styles.input, route.params.mode !== "create" && styles.disabled]} placeholder="Username" value={user?.username}
-                       editable={route.params.mode === "create"}
+                       autoCapitalize="none" autoCorrect={false} editable={route.params.mode === "create"}
                        onChangeText={(value) => onChange("username", value)}/>);
   }
 
