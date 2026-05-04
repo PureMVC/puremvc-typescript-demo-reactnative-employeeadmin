@@ -7,29 +7,34 @@
 //
 
 import {Proxy} from "@puremvc/puremvc-typescript-multicore-framework";
-import {RoleVO} from "./valueObject/RoleVO";
-import {RoleEnum} from "./enum/RoleEnum";
+import {Role} from "./valueObject/Role";
+import {Platform} from "react-native";
 
 export class RoleProxy extends Proxy {
 
   public static NAME = "RoleProxy";
 
   constructor() {
-    super(RoleProxy.NAME, []);
+    super(RoleProxy.NAME, null);
   }
 
-  public findByUsername(username: string): RoleEnum[] {
-    const index = this.data.findIndex((current: RoleVO) => current.username === username);
-    return (index >= 0) ? (this.data[index] as RoleVO).roles : [];
+  public async findAll(signal: AbortSignal): Promise<Role[]> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/roles`, {signal});
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
-  public save(role: RoleVO) {
-    this.data.push(role);
+  public async findByUserId(id: number, signal: AbortSignal): Promise<Role[]> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}/roles`, {signal});
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
-
-  public updateByUsername(username: string, roles: RoleEnum[]) {
-    const index = this.data.findIndex((current: RoleVO) => current.username === username);
-    (index >= 0) ? this.data[index].roles = roles : this.data.push({username: username, roles: roles});
-  }
-
 }

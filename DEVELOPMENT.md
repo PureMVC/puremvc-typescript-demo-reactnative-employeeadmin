@@ -60,6 +60,29 @@ npx create-expo-app EmployeeAdmin --template blank-typescript
 
 ---
 
+### 🔴 Bare (Full Native Control)
+
+```bash
+npx create-expo-app EmployeeAdmin --template blank-typescript
+```
+
+* Full access to iOS/Android code
+* Supports native modules, TurboModules
+* More setup required
+
+---
+
+### 🟡 Dev Build (Hybrid)
+
+```bash
+npx expo prebuild
+npx expo run:ios
+```
+
+* Start Managed → add native later
+
+---
+
 ### 🍎 **Run on iOS**
 Press **Shift + I** to list simulators, then select one (e.g., iPhone 17 Pro).
 

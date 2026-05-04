@@ -7,36 +7,93 @@
 //
 
 import {Proxy} from "@puremvc/puremvc-typescript-multicore-framework";
-import {UserVO} from "./valueObject/UserVO";
+import {User} from "./valueObject/User";
+import {Department} from "./valueObject/Department";
+import {Platform} from "react-native";
 
 export class UserProxy extends Proxy {
 
   public static NAME = "UserProxy";
 
   constructor() {
-    super(UserProxy.NAME, []);
+    super(UserProxy.NAME, null);
   }
 
-  public findAll(): UserVO[] {
-    return this.data;
+  public async findAll(signal : AbortSignal): Promise<Partial<User>[]> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {signal})
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.map((user: User) => ({id: user.id, first: user.first, last: user.last}));
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
-  public findByUsername(username: string): UserVO | undefined {
-    const found = this.data.find((current: UserVO) => current.username === username);
-    return found ? ({ ...found } as UserVO) : undefined;
+  public async findById(id: number, signal: AbortSignal): Promise<User> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}`, {signal});
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
-  public deleteByUsername(username: string): void {
-    this.data = this.data.filter((current: UserVO) => current.username !== username);
+  public async deleteById(id: number): Promise<void> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}`, {
+        method: "DELETE"
+      }
+    );
+
+    if (response.status === 204) {
+      return;
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
-  public save(user: UserVO) {
-    this.data.push(user);
+  async save(user: User) {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {
+        method: "POST",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify(user)
+      }
+    );
+
+    if (response.status === 201) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
-  public update(user: UserVO) {
-    const index = this.data.findIndex((current: UserVO) => current.username === user.username);
-    if (index !== -1) this.data[index] = user;
+  async update(user: User) {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${user.id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(user)
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
+  }
+
+  public async findAllDepartments(signal: AbortSignal): Promise<Department[]> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/departments`, {signal});
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message ?? `Request failed: ${response.status}`);
+    }
   }
 
 }

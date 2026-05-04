@@ -6,18 +6,18 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import {StatusBar} from 'expo-status-bar';
-import {ApplicationFacade} from "./ApplicationFacade";
-import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import {ParamList} from "./ApplicationConstants";
+import React from "react";
 import {NavigationContainer} from "@react-navigation/native";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {TouchableOpacity} from "react-native";
-import {FontAwesome5} from "@expo/vector-icons";
+import {FontAwesome5} from '@expo/vector-icons';
+import {ParamList} from "./ApplicationConstants";
+import {ApplicationFacade} from "./ApplicationFacade";
+import {createDefaultUser} from "./model/valueObject/User";
 import UserList from "./view/components/UserList";
 import UserForm from "./view/components/UserForm";
 import UserRole from "./view/components/UserRole";
-import {createDefaultUser} from "./model/valueObject/UserVO";
-import React from "react";
+import {StatusBar} from "expo-status-bar";
 
 ApplicationFacade.getInstance().startup();
 
@@ -31,7 +31,7 @@ const Application: React.FC = () => {
         <Stack.Screen name="UserList" component={UserList} options={({navigation}) => ({
           title: "User List",
           headerRight: () => (
-            <TouchableOpacity style={{marginRight: 16}} onPress={() => navigation.navigate("UserForm", {user: createDefaultUser(), mode: "create"})}>
+            <TouchableOpacity style={{marginRight: 16}} onPress={() => navigation.navigate("UserForm", {user: createDefaultUser()})}>
               <FontAwesome5 name="plus" size={24} color="#007AFF"/>
             </TouchableOpacity>
           )

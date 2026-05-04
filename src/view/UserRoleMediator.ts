@@ -21,13 +21,18 @@ export class UserRoleMediator extends Mediator {
   }
 
   public onRegister() {
-    this.delegate.findByUsername = (username: string) => this.findByUsername(username)
+    this.delegate.findAll = (signal: AbortSignal) => this.findAll(signal);
+    this.delegate.findByUserId = (id: number, signal: AbortSignal) => this.findByUserId(id, signal)
 
     this.roleProxy = this.facade.retrieveProxy(RoleProxy.NAME) as RoleProxy;
   }
 
-  private findByUsername(username: string) {
-    return this.roleProxy.findByUsername(username);
+  private async findAll(signal: AbortSignal) {
+    return await this.roleProxy.findAll(signal);
+  }
+
+  private async findByUserId(id: number, signal: AbortSignal) {
+    return await this.roleProxy.findByUserId(id, signal);
   }
 
   public get delegate(): IUserRole {

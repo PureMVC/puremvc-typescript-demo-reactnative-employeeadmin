@@ -7,10 +7,10 @@
 //
 
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useFocusEffect} from "@react-navigation/native";
 import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
-import {UserVO} from "../../model/valueObject/UserVO";
+import {User} from "../../model/valueObject/User";
 import {ApplicationFacade} from "../../ApplicationFacade";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 
@@ -19,18 +19,20 @@ interface Props {
 }
 
 export interface IUserList {
-  findAll: () => Partial<UserVO>[],
-  deleteByUsername: (username: string) => void
+  findAll: (signal: AbortSignal) => Promise<Partial<User>[]>,
+  deleteById: (id: number) => Promise<void>
 }
 
 const UserList: React.FC<Props> = ({navigation}) => {
 
   // State
-  const [users, setUsers] = useState<Partial<UserVO>[]>([]); // User Data
+  const [users, setUsers] = useState<Partial<User>[]>([]); // User Data
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   
   const delegate = useRef<IUserList>({
-    findAll: () => users,
-    deleteByUsername: (_username: string) => {},
+    findAll: async (_signal: AbortSignal) => users,
+    deleteById: async (_id: number) => {}
   }).current;
 
   // Effects
@@ -41,13 +43,25 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      const result = delegate.findAll();
-      setUsers([...result]);
+      const controller = new AbortController();
+
+      void (async () => {
+        try {
+          const result = await delegate.findAll(controller.signal);
+          if (!controller.signal.aborted) setUsers(result);
+        } catch (error) {
+          if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+        } finally {
+          if (!controller.signal.aborted) setIsLoading(false);
+        }
+      })();
+
+      return () => controller.abort();
     }, [])
   );
 
   // UI Helpers
-  function ListItem({ user }: { user: Partial<UserVO> }) {
+  function ListItem({ user }: { user: Partial<User> }) {
     const translateX = useRef(new Animated.Value(0)).current;
 
     const responder = useRef(
@@ -66,15 +80,19 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
     return (
       <View style={styles.swipeRow}>
-        <TouchableOpacity style={styles.deleteAction} onPress={() => {
-          delegate.deleteByUsername(user.username!);
-          setUsers((prev) => prev.filter((current) => current.username !== user.username));
+        <TouchableOpacity style={styles.deleteAction} onPress={async () => {
+          try {
+            await delegate.deleteById(user.id!);
+            setUsers((prev) => prev.filter((current) => current.id !== user.id));
+          } catch (error) {
+            setError(error instanceof Error ? error : new Error(String(error)));
+          }
         }}>
           <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
 
         <Animated.View style={[styles.rowContent, { transform: [{ translateX }] }]} {...responder.panHandlers}>
-          <TouchableOpacity onPress={() => navigation.navigate("UserForm", {user: user, mode: "edit"})}>
+          <TouchableOpacity onPress={() => navigation.navigate("UserForm", {user: user})}>
             <Text style={styles.listItem}>{user.last}, {user.first}</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -84,12 +102,20 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
   return (
     <>
-      { users.length === 0 ? (
+      { isLoading ? (
+        <View style={styles.spinner}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : error ? (
+        <View style={styles.container}>
+          <Text style={styles.errorText}>{error.message}</Text>
+        </View>
+      ) : users.length === 0 ? (
         <Text>No Users Found</Text>
       ) : (
         <View style={styles.container}>
-          <FlatList<Partial<UserVO>> data={users}
-            keyExtractor={(user) => `${user.username}`}
+          <FlatList<Partial<User>> data={users}
+            keyExtractor={(user) => `user_${user.id}`}
             renderItem={({ item }) => <ListItem user={item}/>}
           />
         </View>
@@ -99,6 +125,11 @@ const UserList: React.FC<Props> = ({navigation}) => {
 }
 
 const styles = StyleSheet.create({
+  spinner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
   },
@@ -135,6 +166,11 @@ const styles = StyleSheet.create({
   },
   rowContent: {
     backgroundColor: "white",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginTop: 20,
   }
 });
 

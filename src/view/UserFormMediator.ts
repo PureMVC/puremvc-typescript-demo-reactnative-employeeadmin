@@ -7,44 +7,43 @@
 //
 
 import {Mediator} from "@puremvc/puremvc-typescript-multicore-framework";
-import {IUserForm} from "./components/UserForm";
-import {UserVO} from "../model/valueObject/UserVO";
-import {RoleEnum} from "../model/enum/RoleEnum";
-import {RoleProxy} from "../model/RoleProxy";
 import {UserProxy} from "../model/UserProxy";
+import {IUserForm} from "./components/UserForm";
+import {User} from "../model/valueObject/User";
 
 export class UserFormMediator extends Mediator {
 
   public static NAME = "UserFormMediator";
 
   private userProxy!: UserProxy;
-  private roleProxy!: RoleProxy;
 
   constructor(delegate: any) {
     super(UserFormMediator.NAME, delegate);
   }
 
   public onRegister() {
-    this.delegate.findByUsername = (username: string) => this.findByUsername(username);
-    this.delegate.save = (user: UserVO, roles: RoleEnum[]) => this.save(user, roles);
-    this.delegate.update = (user: UserVO, roles: RoleEnum[]) => this.update(user, roles);
+    this.delegate.findAllDepartments = (signal: AbortSignal) => this.findAllDepartments(signal);
+    this.delegate.findById = (id: number, signal: AbortSignal) => this.findById(id, signal);
+    this.delegate.save = (user: User) => this.save(user);
+    this.delegate.update = (user: User) => this.update(user);
 
     this.userProxy = this.facade.retrieveProxy(UserProxy.NAME) as UserProxy;
-    this.roleProxy = this.facade.retrieveProxy(RoleProxy.NAME) as RoleProxy;
   }
 
-  private findByUsername(username: string) {
-    return this.userProxy.findByUsername(username);
+  private async findAllDepartments(signal: AbortSignal) {
+    return await this.userProxy.findAllDepartments(signal);
   }
 
-  private save(user: UserVO, roles: RoleEnum[]) {
-    this.userProxy.save(user);
-    this.roleProxy.updateByUsername(user.username, roles);
+  private async findById(id: number, signal: AbortSignal) {
+    return await this.userProxy.findById(id, signal);
   }
 
-  private update(user: UserVO, roles: RoleEnum[]) {
-    this.userProxy.update(user);
-    this.roleProxy.updateByUsername(user.username, roles);
+  private async save(user: User) {
+    await this.userProxy.save(user);
+  }
+
+  private async update(user: User) {
+    await this.userProxy.update(user);
   }
 
   public get delegate(): IUserForm {

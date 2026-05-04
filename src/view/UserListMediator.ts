@@ -21,18 +21,18 @@ export class UserListMediator extends Mediator {
   }
 
   public onRegister() {
-    this.delegate.findAll = () => this.findAll();
-    this.delegate.deleteByUsername = (username: string) => this.deleteByUsername(username);
+    this.delegate.findAll = (signal: AbortSignal) => this.findAll(signal);
+    this.delegate.deleteById = (id: number) => this.deleteById(id);
 
     this.userProxy = this.facade.retrieveProxy(UserProxy.NAME) as UserProxy;
   }
 
-  private findAll() {
-    return this.userProxy.findAll();
+  private async findAll(signal: AbortSignal) {
+    return await this.userProxy.findAll(signal);
   }
 
-  private deleteByUsername(username: string): void {
-    this.userProxy.deleteByUsername(username);
+  private async deleteById(id: number): Promise<void> {
+    await this.userProxy.deleteById(id);
   }
 
   public get delegate(): IUserList {
