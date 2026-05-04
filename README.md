@@ -4,6 +4,12 @@ This demo illustrates techniques for performing routine client-side maintenance 
 ---
 
 ## ⚙️ Installation
+### 🐳 Docker (🧩API services)
+```shell
+git clone https://github.com/PureMVC/puremvc-js-demo-microservice-employeeadmin
+cd puremvc-js-demo-microservice-employeeadmin
+docker compose up
+```
 
 ### 📱 Run React Native Project
 ```shell
