@@ -7,6 +7,12 @@ This demo illustrates techniques for performing routine client-side maintenance 
 
 ---
 
+## Screenshot
+![PureMVC React Native Demo: Android](https://raw.githubusercontent.com/PureMVC/puremvc-typescript-demo-reactnative-employeeadmin/refs/heads/main/images/android.png)
+![PureMVC React Native Demo: iOS](https://raw.githubusercontent.com/PureMVC/puremvc-typescript-demo-reactnative-employeeadmin/refs/heads/main/images/ios.png)
+
+---
+
 ## ⚙️ Installation
 ### 🐳 Docker (🧩API services)
 ```shell
