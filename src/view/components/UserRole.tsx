@@ -40,7 +40,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    if (route.params?.roles.length !== 0 || route.params?.user.username === "")
+    if (route.params?.roles.length !== 0)
       return setRoles(route.params?.roles);
 
     let result = delegate.findByUsername(route.params?.user.username);

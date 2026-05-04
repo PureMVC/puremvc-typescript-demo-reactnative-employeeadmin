@@ -52,7 +52,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   }, []);
 
   useEffect(() => {
-    const username = route?.params?.user?.username ?? "";
+    const username = route.params?.user?.username ?? "";
 
     const result = delegate.findByUsername(username);
     if (result !== undefined) setUser({ ...result, confirm: result.password });
@@ -60,7 +60,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (route?.params?.roles)
+      if (route.params?.roles)
         setRoles(route.params.roles);
     }, [route.params?.roles])
   );
