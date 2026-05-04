@@ -6,9 +6,9 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {RouteProp} from "@react-navigation/native";
+import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker";
 import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
 import {createDefaultUser, User, validate} from "../../model/valueObject/User";
@@ -16,6 +16,7 @@ import {DEFAULT_DEPARTMENT, Department} from "../../model/valueObject/Department
 import {ApplicationFacade} from "../../ApplicationFacade";
 import {MaterialIcons} from "@expo/vector-icons";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {Role} from "../../model/valueObject/Role";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserForm">;
@@ -25,8 +26,8 @@ interface Props {
 export interface IUserForm {
   findAllDepartments: (signal: AbortSignal) => Promise<Department[]>,
   findById: (id: number, signal: AbortSignal) => Promise<User>,
-  save: (user: User) => Promise<void>,
-  update: (user: User) => Promise<void>
+  save: (user: User, roles: Role[]) => Promise<void>,
+  update: (user: User, roles: Role[]) => Promise<void>
 }
 
 const UserForm: React.FC<Props> = ({navigation, route}) => {
@@ -34,6 +35,8 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   // State
   const [departments, setDepartments] = useState<Department[]>([]); // UI Data
   const [user, setUser] = useState<User>(createDefaultUser()); // User Data
+  const [roles, setRoles] = useState<Role[]>(route.params?.roles ?? []); // Roles
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -44,8 +47,8 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   const delegate = useRef<IUserForm>({
     findAllDepartments: async (_signal: AbortSignal): Promise<Department[]> => departments,
     findById: async (_id: number, _signal: AbortSignal): Promise<User> => user,
-    save: async (_user: User): Promise<void> => {},
-    update: async (_user: User): Promise<void> => {}
+    save: async (_user: User, roles: Role[]): Promise<void> => {},
+    update: async (_user: User, roles: Role[]): Promise<void> => {}
   }).current;
 
   // Effects
@@ -54,7 +57,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     return () => ApplicationFacade.getInstance().unregister(null, ApplicationConstants.USER_FORM);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // fetch departments
     const controller = new AbortController();
 
     void (async () => {
@@ -69,14 +72,14 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // fetch user details
     if (departments.length === 0) return;
 
     const controller = new AbortController();
 
     void (async () => {
       try {
-        const id = route?.params?.user?.id ?? 0;
+        const id = route.params?.user?.id ?? 0;
         if (id === 0) return setIsLoading(false);
 
         const result = await delegate.findById(id, controller.signal);
@@ -89,7 +92,14 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     })();
 
     return () => controller.abort();
-  }, [departments])
+  }, [departments]);
+
+  useFocusEffect( // receive roles from the UserRole
+    useCallback(() => {
+      if (route.params?.roles)
+        setRoles(route.params.roles);
+    }, [route.params?.roles])
+  );
 
   // Handlers
   const onChange = (field: keyof User, value: string) => {
@@ -109,7 +119,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onRoles = (_event: any) => {
-    navigation.navigate("UserRole", {user: user});
+    navigation.navigate("UserRole", {user: user, roles: roles});
   }
 
   const onSave = async (_event: any) => {
@@ -117,10 +127,10 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     if (error != null) return alert(error);
 
     try {
-      user.id === 0 ? await delegate.save(user) : await delegate.update(user);
+      user.id === 0 ? await delegate.save(user, roles) : await delegate.update(user, roles);
       if (navigation.canGoBack()) navigation.goBack();
     } catch (error) {
-      console.error("Failed to save user:", error);
+      alert("Failed to save user: " + error);
     }
   }
 
@@ -185,7 +195,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     );
   }
 
-  function roles() {
+  function rolesButton() {
     return (
       <TouchableOpacity style={[styles.button, styles.roles]} onPress={onRoles}>
         <Text style={styles.buttonText}>ROLES</Text>
@@ -231,7 +241,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
             <>{password()}{confirm()}</>
           </View>
           <View style={styles.row}>
-            <>{department()}{roles()}</>
+            <>{department()}{rolesButton()}</>
           </View>
           <View style={styles.row}>
             <>{cancel()}{save()}</>

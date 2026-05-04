@@ -44,7 +44,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
     return () => ApplicationFacade.getInstance().unregister(null, ApplicationConstants.USER_ROLE);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // fetch roles
     const controller = new AbortController();
 
     void (async () => {
@@ -59,19 +59,18 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // fetch user roles
     if (roles.length === 0) return;
 
-    if (route.params?.user.roles.length == 0)
-      return setIsLoading(false);
+    if (route.params?.roles.length !== 0) {
+      setIsLoading(false);
+      return setData(route.params?.roles);
+    }
 
     const controller = new AbortController();
 
     void (async () => {
       try {
-        if (route.params?.user.roles.length === 0 || route.params?.user.id === 0)
-          return setData(route.params?.user.roles);
-
         let result = await delegate.findByUserId(route.params?.user.id, controller.signal);
         if (!controller.signal.aborted) setData(result);
       } catch (error) {
@@ -96,12 +95,11 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onSave = () => {
-    route.params.user.roles = data;
-    if (navigation.canGoBack()) navigation.goBack();
+    navigation.popTo("UserForm", {user: route.params?.user, roles: data});
   }
 
   const onCancel = () => {
-    if (navigation.canGoBack()) navigation.goBack();
+    navigation.popTo("UserForm", {user: route.params?.user, roles: []});
   }
 
   // UI Helpers

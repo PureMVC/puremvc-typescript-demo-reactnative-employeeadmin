@@ -10,6 +10,7 @@ import {Mediator} from "@puremvc/puremvc-typescript-multicore-framework";
 import {UserProxy} from "../model/UserProxy";
 import {IUserForm} from "./components/UserForm";
 import {User} from "../model/valueObject/User";
+import {Role} from "../model/valueObject/Role";
 
 export class UserFormMediator extends Mediator {
 
@@ -24,8 +25,8 @@ export class UserFormMediator extends Mediator {
   public onRegister() {
     this.delegate.findAllDepartments = (signal: AbortSignal) => this.findAllDepartments(signal);
     this.delegate.findById = (id: number, signal: AbortSignal) => this.findById(id, signal);
-    this.delegate.save = (user: User) => this.save(user);
-    this.delegate.update = (user: User) => this.update(user);
+    this.delegate.save = (user: User, roles: Role[]) => this.save(user, roles);
+    this.delegate.update = (user: User, roles: Role[]) => this.update(user, roles);
 
     this.userProxy = this.facade.retrieveProxy(UserProxy.NAME) as UserProxy;
   }
@@ -38,11 +39,13 @@ export class UserFormMediator extends Mediator {
     return await this.userProxy.findById(id, signal);
   }
 
-  private async save(user: User) {
+  private async save(user: User, roles: Role[]) {
+    user.roles = roles;
     await this.userProxy.save(user);
   }
 
-  private async update(user: User) {
+  private async update(user: User, roles: Role[]) {
+    user.roles = roles;
     await this.userProxy.update(user);
   }
 

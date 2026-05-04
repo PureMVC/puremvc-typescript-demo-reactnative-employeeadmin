@@ -7,6 +7,7 @@
 //
 
 import {User} from "./model/valueObject/User";
+import {Role} from "./model/valueObject/Role";
 
 export class ApplicationConstants {
   public static KEY: string = "employeeAdmin";
@@ -21,7 +22,7 @@ export class ApplicationConstants {
 }
 
 export type ParamList = {
-  UserList: {};
-  UserForm: { user: Partial<User> };
-  UserRole: { user: User };
+  UserList: undefined;
+  UserForm: { user: Partial<User>, roles?: Role[] };
+  UserRole: { user: User, roles: Role[] };
 };
