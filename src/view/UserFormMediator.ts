@@ -17,11 +17,13 @@ export class UserFormMediator extends Mediator {
 
   public static NAME = "UserFormMediator";
 
-  private userProxy!: UserProxy;
-  private roleProxy!: RoleProxy;
+  private userProxy?: UserProxy;
+  private roleProxy?: RoleProxy;
+  private delegate: IUserForm;
 
-  constructor(delegate: any) {
-    super(UserFormMediator.NAME, delegate);
+  constructor(delegate: IUserForm) {
+    super(UserFormMediator.NAME, null);
+    this.delegate = delegate;
   }
 
   public onRegister() {
@@ -34,21 +36,17 @@ export class UserFormMediator extends Mediator {
   }
 
   private findByUsername(username: string) {
-    return this.userProxy.findByUsername(username);
+    return this.userProxy?.findByUsername(username);
   }
 
   private save(user: UserVO, roles: RoleEnum[]) {
-    this.userProxy.save(user);
-    this.roleProxy.updateByUsername(user.username, roles);
+    this.userProxy?.save(user);
+    this.roleProxy?.updateByUsername(user.username, roles);
   }
 
   private update(user: UserVO, roles: RoleEnum[]) {
-    this.userProxy.update(user);
-    this.roleProxy.updateByUsername(user.username, roles);
-  }
-
-  public get delegate(): IUserForm {
-    return this.viewComponent
+    this.userProxy?.update(user);
+    this.roleProxy?.updateByUsername(user.username, roles);
   }
 
 }

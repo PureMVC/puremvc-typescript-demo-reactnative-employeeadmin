@@ -14,10 +14,12 @@ export class UserListMediator extends Mediator {
 
   public static NAME = "UserListMediator";
 
-  private userProxy!: UserProxy;
+  private userProxy?: UserProxy;
+  private delegate: IUserList;
 
-  constructor(delegate: any) {
-    super(UserListMediator.NAME, delegate);
+  constructor(delegate: IUserList) {
+    super(UserListMediator.NAME, null);
+    this.delegate = delegate;
   }
 
   public onRegister() {
@@ -28,15 +30,11 @@ export class UserListMediator extends Mediator {
   }
 
   private findAll() {
-    return this.userProxy.findAll();
+    return this.userProxy?.findAll() ?? [];
   }
 
   private deleteByUsername(username: string): void {
-    this.userProxy.deleteByUsername(username);
-  }
-
-  public get delegate(): IUserList {
-    return this.viewComponent
+    this.userProxy?.deleteByUsername(username);
   }
 
 }

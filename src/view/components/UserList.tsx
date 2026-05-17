@@ -28,7 +28,7 @@ const UserList: React.FC<Props> = ({navigation}) => {
   // State
   const [users, setUsers] = useState<Partial<UserVO>[]>([]); // User Data
   
-  const delegate = useRef<IUserList>({
+  const delegate = useRef<IUserList>({ // No-op implementation overridden by Mediator during registration
     findAll: () => users,
     deleteByUsername: (_username: string) => {},
   }).current;

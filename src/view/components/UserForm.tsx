@@ -39,7 +39,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   const isAndroid = Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
 
-  const delegate = useRef<IUserForm>({
+  const delegate = useRef<IUserForm>({ // No-op implementation overridden by Mediator during registration
     findByUsername: (_username: string): UserVO => user,
     save: (_user: UserVO, _roles: RoleEnum[]): void => {},
     update: (_user: UserVO, _roles: RoleEnum[]): void => {}

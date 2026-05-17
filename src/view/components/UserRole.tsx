@@ -29,7 +29,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   // State
   const [roles, setRoles] = useState<RoleEnum[]>([]); // User Data
 
-  const delegate = useRef<IUserRole>({
+  const delegate = useRef<IUserRole>({ // No-op implementation overridden by Mediator during registration
     findByUsername: (_username: string): RoleEnum[] => roles
   }).current;
 

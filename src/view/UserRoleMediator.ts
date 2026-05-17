@@ -14,10 +14,12 @@ export class UserRoleMediator extends Mediator {
 
   public static NAME = "UserRoleMediator";
 
-  private roleProxy!: RoleProxy;
+  private roleProxy?: RoleProxy;
+  private delegate: IUserRole;
 
-  constructor(delegate: any) {
-    super(UserRoleMediator.NAME, delegate);
+  constructor(delegate: IUserRole) {
+    super(UserRoleMediator.NAME, null);
+    this.delegate = delegate;
   }
 
   public onRegister() {
@@ -27,11 +29,7 @@ export class UserRoleMediator extends Mediator {
   }
 
   private findByUsername(username: string) {
-    return this.roleProxy.findByUsername(username);
-  }
-
-  public get delegate(): IUserRole {
-    return this.viewComponent
+    return this.roleProxy?.findByUsername(username) ?? [];
   }
 
 }
