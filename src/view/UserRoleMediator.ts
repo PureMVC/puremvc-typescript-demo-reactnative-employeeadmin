@@ -14,10 +14,12 @@ export class UserRoleMediator extends Mediator {
 
   public static NAME = "UserRoleMediator";
 
-  private roleProxy!: RoleProxy;
+  private roleProxy?: RoleProxy;
+  private delegate: IUserRole;
 
-  constructor(delegate: any) {
-    super(UserRoleMediator.NAME, delegate);
+  constructor(delegate: IUserRole) {
+    super(UserRoleMediator.NAME, null);
+    this.delegate = delegate;
   }
 
   public onRegister() {
@@ -28,15 +30,11 @@ export class UserRoleMediator extends Mediator {
   }
 
   private async findAll(signal: AbortSignal) {
-    return await this.roleProxy.findAll(signal);
+    return await this.roleProxy?.findAll(signal) ?? [];
   }
 
   private async findByUserId(id: number, signal: AbortSignal) {
-    return await this.roleProxy.findByUserId(id, signal);
-  }
-
-  public get delegate(): IUserRole {
-    return this.viewComponent
+    return await this.roleProxy?.findByUserId(id, signal) ?? [];
   }
 
 }

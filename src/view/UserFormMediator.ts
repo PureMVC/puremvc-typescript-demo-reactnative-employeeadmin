@@ -16,10 +16,12 @@ export class UserFormMediator extends Mediator {
 
   public static NAME = "UserFormMediator";
 
-  private userProxy!: UserProxy;
+  private userProxy?: UserProxy;
+  private delegate: IUserForm;
 
-  constructor(delegate: any) {
-    super(UserFormMediator.NAME, delegate);
+  constructor(delegate: IUserForm) {
+    super(UserFormMediator.NAME, null);
+    this.delegate = delegate;
   }
 
   public onRegister() {
@@ -32,25 +34,21 @@ export class UserFormMediator extends Mediator {
   }
 
   private async findAllDepartments(signal: AbortSignal) {
-    return await this.userProxy.findAllDepartments(signal);
+    return await this.userProxy?.findAllDepartments(signal) ?? [];
   }
 
   private async findById(id: number, signal: AbortSignal) {
-    return await this.userProxy.findById(id, signal);
+    return await this.userProxy?.findById(id, signal) ?? null;
   }
 
   private async save(user: User, roles: Role[]) {
     user.roles = roles;
-    await this.userProxy.save(user);
+    await this.userProxy?.save(user);
   }
 
   private async update(user: User, roles: Role[]) {
     user.roles = roles;
-    await this.userProxy.update(user);
-  }
-
-  public get delegate(): IUserForm {
-    return this.viewComponent
+    await this.userProxy?.update(user);
   }
 
 }

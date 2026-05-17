@@ -30,7 +30,7 @@ const UserList: React.FC<Props> = ({navigation}) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   
-  const delegate = useRef<IUserList>({
+  const delegate = useRef<IUserList>({ // No-op implementation overridden by Mediator during registration
     findAll: async (_signal: AbortSignal) => users,
     deleteById: async (_id: number) => {}
   }).current;

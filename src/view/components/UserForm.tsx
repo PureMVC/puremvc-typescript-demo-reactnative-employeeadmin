@@ -25,7 +25,7 @@ interface Props {
 
 export interface IUserForm {
   findAllDepartments: (signal: AbortSignal) => Promise<Department[]>,
-  findById: (id: number, signal: AbortSignal) => Promise<User>,
+  findById: (id: number, signal: AbortSignal) => Promise<User | null>,
   save: (user: User, roles: Role[]) => Promise<void>,
   update: (user: User, roles: Role[]) => Promise<void>
 }
@@ -44,9 +44,9 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   const isAndroid = Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
 
-  const delegate = useRef<IUserForm>({
+  const delegate = useRef<IUserForm>({ // No-op implementation overridden by Mediator during registration
     findAllDepartments: async (_signal: AbortSignal): Promise<Department[]> => departments,
-    findById: async (_id: number, _signal: AbortSignal): Promise<User> => user,
+    findById: async (_id: number, _signal: AbortSignal): Promise<User | null> => user,
     save: async (_user: User, roles: Role[]): Promise<void> => {},
     update: async (_user: User, roles: Role[]): Promise<void> => {}
   }).current;
@@ -83,7 +83,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
         if (id === 0) return setIsLoading(false);
 
         const result = await delegate.findById(id, controller.signal);
-        if (!controller.signal.aborted) setUser({ ...result, confirm: result.password });
+        if (!controller.signal.aborted && result != null) setUser({ ...result, confirm: result.password });
       } catch (error) {
         if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
       } finally {

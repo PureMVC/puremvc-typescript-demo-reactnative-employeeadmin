@@ -33,7 +33,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const delegate = useRef<IUserRole>({
+  const delegate = useRef<IUserRole>({ // No-op implementation overridden by Mediator during registration
     findAll: async (_signal: AbortSignal): Promise<Role[]> => roles,
     findByUserId: async (_id: number, _signal): Promise<Role[]> => data
   }).current;
