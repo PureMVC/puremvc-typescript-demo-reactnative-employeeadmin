@@ -7,8 +7,9 @@
 //
 
 import {IDelegate} from "./IDelegate";
-import {RoleEnum} from "../../model/enum/RoleEnum";
+import {Role} from "../../model/valueObject/Role";
 
 export interface IUserRole extends IDelegate {
-  findByUsername: (username: string) => RoleEnum[]
+  findAll: (signal: AbortSignal) => Promise<Role[]>,
+  findByUserId: (id: number, signal: AbortSignal) => Promise<Role[]>
 }

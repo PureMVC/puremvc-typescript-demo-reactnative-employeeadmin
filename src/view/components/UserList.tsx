@@ -7,12 +7,12 @@
 //
 
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {useFocusEffect} from "@react-navigation/native";
 import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
+import {User} from "../../model/valueObject/User";
 import {ApplicationFacade} from "../../ApplicationFacade";
-import {UserVO} from "../../model/valueObject/UserVO";
 import {IUserList} from "../interfaces/IUserList";
 
 interface Props {
@@ -22,11 +22,13 @@ interface Props {
 const UserList: React.FC<Props> = ({navigation}) => {
 
   // State
-  const [users, setUsers] = useState<UserVO[]>([]); // User Data
+  const [users, setUsers] = useState<User[]>([]); // User Data
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   
   const delegate = useRef<IUserList>({ // No-op implementation overridden by Mediator during registration
-    findAll: () => users,
-    deleteByUsername: (_username: string) => {},
+    findAll: async (_signal: AbortSignal) => users,
+    deleteById: async (_id: number) => {}
   }).current;
 
   // Effects
@@ -37,13 +39,25 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      const result = delegate.findAll();
-      setUsers([...result]);
+      const controller = new AbortController();
+
+      void (async () => {
+        try {
+          const result = await delegate.findAll(controller.signal);
+          if (!controller.signal.aborted) setUsers(result);
+        } catch (error) {
+          if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+        } finally {
+          if (!controller.signal.aborted) setIsLoading(false);
+        }
+      })();
+
+      return () => controller.abort();
     }, [])
   );
 
   // UI Components
-  function ListItem({ user }: { user: UserVO }) {
+  function ListItem({ user }: { user: User }) {
     const translateX = useRef(new Animated.Value(0)).current;
 
     const responder = useRef(
@@ -60,14 +74,17 @@ const UserList: React.FC<Props> = ({navigation}) => {
       })
     ).current;
 
-    // Handlers
-    const onDelete = () => {
-      delegate.deleteByUsername(user.username!);
-      setUsers((prev) => prev.filter((current) => current.username !== user.username));
+    const onDelete = async () => {
+      try {
+        await delegate.deleteById(user.id!);
+        setUsers((prev) => prev.filter((current) => current.id !== user.id));
+      } catch (error) {
+        setError(error instanceof Error ? error : new Error(String(error)));
+      }
     }
 
     const onEdit = () => {
-      navigation.navigate("UserForm", {user: user, mode: "edit"});
+      navigation.navigate("UserForm", {user: user});
     }
 
     return (
@@ -87,15 +104,23 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
   // UI Helpers
   const List = () => (
-    <FlatList<UserVO>
-      data={users} keyExtractor={(user) => `${user.username}`}
+    <FlatList<User>
+      data={users} keyExtractor={(user) => `user_${user.id}`}
       renderItem={({ item }) => <ListItem user={item}/>}
     />
   );
 
   return (
     <>
-      { users.length === 0 ? (
+      { isLoading ? (
+        <View style={styles.spinner}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : error ? (
+        <View style={styles.container}>
+          <Text style={styles.errorText}>{error.message}</Text>
+        </View>
+      ) : users.length === 0 ? (
         <Text>No Users Found</Text>
       ) : (
         <View style={styles.container}>
@@ -107,6 +132,11 @@ const UserList: React.FC<Props> = ({navigation}) => {
 }
 
 const styles = StyleSheet.create({
+  spinner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
   },
@@ -136,12 +166,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "red",
   },
+
   deleteText: {
     color: "white",
     fontWeight: "bold",
   },
   rowContent: {
     backgroundColor: "white",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginTop: 20,
   }
 });
 

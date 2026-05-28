@@ -7,11 +7,13 @@
 //
 
 import {IDelegate} from "./IDelegate";
-import {UserVO} from "../../model/valueObject/UserVO";
-import {RoleEnum} from "../../model/enum/RoleEnum";
+import {User} from "../../model/valueObject/User";
+import {Department} from "../../model/valueObject/Department";
+import {Role} from "../../model/valueObject/Role";
 
 export interface IUserForm extends IDelegate {
-  findByUsername: (username: string) => UserVO | undefined,
-  save: (user: UserVO, roles: RoleEnum[]) => void,
-  update: (user: UserVO, roles: RoleEnum[]) => void,
+  findAllDepartments: (signal: AbortSignal) => Promise<Department[]>,
+  findById: (id: number, signal: AbortSignal) => Promise<User | null>,
+  save: (user: User, roles: Role[]) => Promise<void>,
+  update: (user: User, roles: Role[]) => Promise<void>
 }

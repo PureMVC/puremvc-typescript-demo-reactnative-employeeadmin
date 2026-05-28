@@ -7,9 +7,9 @@
 //
 
 import {IDelegate} from "./IDelegate";
-import {UserVO} from "../../model/valueObject/UserVO";
+import {User} from "../../model/valueObject/User";
 
 export interface IUserList extends IDelegate {
-  findAll: () => UserVO[],
-  deleteByUsername: (username: string) => void
+  findAll: (signal: AbortSignal) => Promise<User[]>,
+  deleteById: (id: number) => Promise<void>
 }

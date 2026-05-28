@@ -7,13 +7,13 @@
 //
 
 import React, {useEffect, useRef, useState} from "react";
-import {Button, ScrollView, StyleSheet, Text, View} from "react-native";
+import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
 import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
+import {Role} from "../../model/valueObject/Role";
 import {ApplicationFacade} from "../../ApplicationFacade";
-import {RoleEnum} from "../../model/enum/RoleEnum";
 import {IUserRole} from "../interfaces/IUserRole";
 
 interface Props {
@@ -24,10 +24,14 @@ interface Props {
 const UserRole: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const [roles, setRoles] = useState<RoleEnum[]>([]); // User Data
+  const [roles, setRoles] = useState<Role[]>([]); // UI Data
+  const [data, setData] = useState<Role[]>([]); // User Data
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const delegate = useRef<IUserRole>({ // No-op implementation overridden by Mediator during registration
-    findByUsername: (_username: string): RoleEnum[] => roles
+    findAll: async (_signal: AbortSignal): Promise<Role[]> => roles,
+    findByUserId: async (_id: number, _signal): Promise<Role[]> => data
   }).current;
 
   // Effects
@@ -36,17 +40,52 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
     return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_ROLE);
   }, []);
 
-  useEffect(() => {
-    if (route.params.roles.length !== 0)
-      return setRoles(route.params.roles);
+  useEffect(() => { // fetch roles
+    const controller = new AbortController();
 
-    let result = delegate.findByUsername(route.params.user.username);
-    setRoles(result);
+    void (async () => {
+      try {
+        let result = await delegate.findAll(controller.signal);
+        if (!controller.signal.aborted) setRoles(result);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setError(error instanceof Error ? error : new Error(String(error)));
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => controller.abort();
   }, []);
 
+  useEffect(() => { // fetch user roles
+    if (roles.length === 0) return;
+
+    if (route.params.roles.length !== 0) {
+      setIsLoading(false);
+      setData(route.params.roles);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        let result = await delegate.findByUserId(route.params.user.id, controller.signal);
+        if (!controller.signal.aborted) setData(result);
+      } catch (error) {
+        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [roles]);
+
   // Handlers
-  const onChange = (role: RoleEnum) => {
-    setRoles((prev: RoleEnum[]) => {
+  const onChange = (role: Role) => {
+    setData((prev: Role[]) => {
       if (prev.some(current => current.id === role.id)) {
         return prev.filter(current => current.id !== role.id); // Remove
       } else {
@@ -56,19 +95,19 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onSave = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: roles, mode: route.params.mode});
+    navigation.popTo("UserForm", {user: route.params.user, roles: data});
   }
 
   const onCancel = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: [], mode: route.params.mode});
+    navigation.popTo("UserForm", {user: route.params.user, roles: []});
   }
 
   // UI Helpers
   const List = () => (
     <>
-      {Object.values(RoleEnum).map((role: RoleEnum) => (
-        <View key={`${role.id}`} style={styles.item}>
-          <Checkbox value={roles.some(current => current.id === role.id)} onValueChange={() => onChange(role)}/>
+      {roles?.map((role: Role) => (
+        <View key={`role_${role.id}`} style={styles.item}>
+          <Checkbox value={data.some(current => current.id === role.id)} onValueChange={() => onChange(role)}/>
           <Text style={styles.label}>{role.name}</Text>
         </View>
       ))}
@@ -84,18 +123,35 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {List()}
-      </ScrollView>
-      <View style={styles.sticky}>
-        {Cancel()}{Save()}
-      </View>
-    </View>
+    <>
+      { isLoading ? (
+        <View style={styles.spinner}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : error ? (
+        <View style={styles.container}>
+          <Text style={styles.errorText}>{error.message}</Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <ScrollView style={styles.scrollView}>
+            {List()}
+          </ScrollView>
+          <View style={styles.sticky}>
+            {Cancel()}{Save()}
+          </View>
+        </View>
+      )}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  spinner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
   },
@@ -129,6 +185,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderColor: "#ddd",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginTop: 20,
   }
 });
 

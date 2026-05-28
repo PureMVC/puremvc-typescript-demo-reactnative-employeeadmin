@@ -6,8 +6,8 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import {UserVO} from "./model/valueObject/UserVO";
-import {RoleEnum} from "./model/enum/RoleEnum";
+import {User} from "./model/valueObject/User";
+import {Role} from "./model/valueObject/Role";
 
 export class ApplicationConstants {
   public static KEY: string = "employeeAdmin";
@@ -23,6 +23,6 @@ export class ApplicationConstants {
 
 export type ParamList = {
   UserList: undefined;
-  UserForm: { user: UserVO, mode: "create" | "edit", roles?: RoleEnum[] };
-  UserRole: { user: UserVO, mode: "create" | "edit", roles: RoleEnum[] };
+  UserForm: { user: User, roles?: Role[] };
+  UserRole: { user: User, roles: Role[] };
 };
