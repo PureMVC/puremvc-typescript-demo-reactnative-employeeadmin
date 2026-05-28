@@ -18,7 +18,7 @@ import UserList from "./view/components/UserList";
 import UserForm from "./view/components/UserForm";
 import UserRole from "./view/components/UserRole";
 import {createDefaultUser} from "./model/valueObject/UserVO";
-import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 
 ApplicationFacade.getInstance().startup();
 
