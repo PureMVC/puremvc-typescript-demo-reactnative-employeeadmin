@@ -80,9 +80,9 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     return () => controller.abort();
   }, []);
 
-  useFocusEffect( // receive roles from the UserRole
+  useFocusEffect(
     useCallback(() => {
-      route.params.roles && setRoles(route.params.roles);
+      route.params.roles && setRoles(route.params.roles); // receive roles from the UserRole
     }, [route.params.roles])
   );
 
