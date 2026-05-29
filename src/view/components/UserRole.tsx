@@ -7,7 +7,7 @@
 //
 
 import React, {useEffect, useState} from "react";
-import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, View} from "react-native";
+import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
@@ -76,10 +76,10 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   const List = () => (
     <>
       {roles?.map((role: Role) => (
-        <View key={`role_${role.id}`} style={styles.item}>
+        <TouchableOpacity key={`${role.id}`} style={styles.item} onPress={() => onChange(role)} activeOpacity={0.7}>
           <Checkbox value={data.some(current => current.id === role.id)} onValueChange={() => onChange(role)}/>
           <Text style={styles.label}>{role.name}</Text>
-        </View>
+        </TouchableOpacity>
       ))}
     </>
   );
