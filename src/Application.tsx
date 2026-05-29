@@ -13,14 +13,20 @@ import {createNativeStackNavigator, NativeStackNavigationProp} from "@react-navi
 import {StatusBar} from 'expo-status-bar';
 import {FontAwesome5} from "@expo/vector-icons";
 import {ApplicationFacade} from "./ApplicationFacade";
-import {ParamList} from "./ApplicationConstants";
 import UserList from "./view/components/UserList";
 import UserForm from "./view/components/UserForm";
 import UserRole from "./view/components/UserRole";
-import {createDefaultUser} from "./model/valueObject/UserVO";
+import {createDefaultUser, UserVO} from "./model/valueObject/UserVO";
 import {SafeAreaProvider} from "react-native-safe-area-context";
+import {RoleEnum} from "./model/enum/RoleEnum";
 
 ApplicationFacade.getInstance().startup();
+
+export type ParamList = {
+  UserList: undefined;
+  UserForm: { user: UserVO, mode: "create" | "edit", roles?: RoleEnum[] };
+  UserRole: { user: UserVO, mode: "create" | "edit", roles: RoleEnum[] };
+};
 
 const Stack = createNativeStackNavigator<ParamList>();
 
