@@ -6,14 +6,14 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useRef} from "react";
 import {ActivityIndicator, Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {useFocusEffect} from "@react-navigation/native";
-import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
+import {ParamList} from "../../Application";
 import {User} from "../../model/valueObject/User";
-import {ApplicationFacade} from "../../ApplicationFacade";
-import {IUserList} from "../interfaces/IUserList";
+import {useAppDispatch, useAppSelector} from "../../ApplicationStore";
+import {deleteById, findAll} from "../../model/UserThunk";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserList">;
@@ -21,39 +21,17 @@ interface Props {
 
 const UserList: React.FC<Props> = ({navigation}) => {
 
+  // Controller
+  const dispatch = useAppDispatch();
+
   // State
-  const [users, setUsers] = useState<User[]>([]); // User Data
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  const delegate = useRef<IUserList>({ // No-op implementation overridden by Mediator during registration
-    findAll: async (_signal: AbortSignal) => users,
-    deleteById: async (_id: number) => {}
-  }).current;
+  const {users, isLoading, error} = useAppSelector((state) => state.UserListSlice);
 
   // Effects
-  useEffect(() => {
-    ApplicationFacade.getInstance().register(delegate, ApplicationConstants.USER_LIST)
-    return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_LIST);
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      const controller = new AbortController();
-
-      void (async () => {
-        try {
-          const result = await delegate.findAll(controller.signal);
-          if (!controller.signal.aborted) setUsers(result);
-        } catch (error) {
-          if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
-        } finally {
-          if (!controller.signal.aborted) setIsLoading(false);
-        }
-      })();
-
-      return () => controller.abort();
-    }, [])
+      void dispatch(findAll()).unwrap();
+    }, [dispatch])
   );
 
   // UI Components
@@ -76,15 +54,14 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
     const onDelete = async () => {
       try {
-        await delegate.deleteById(user.id!);
-        setUsers((prev) => prev.filter((current) => current.id !== user.id));
+        await dispatch(deleteById(user.id)).unwrap();
       } catch (error) {
-        setError(error instanceof Error ? error : new Error(String(error)));
+        alert(`Failed to delete user ${error}`);
       }
     }
 
     const onEdit = () => {
-      navigation.navigate("UserForm", {user: user});
+      navigation.navigate("UserForm", { user: user });
     }
 
     return (
@@ -105,7 +82,7 @@ const UserList: React.FC<Props> = ({navigation}) => {
   // UI Helpers
   const List = () => (
     <FlatList<User>
-      data={users} keyExtractor={(user) => `user_${user.id}`}
+      data={users} keyExtractor={(user) => `${user.id}`}
       renderItem={({ item }) => <ListItem user={item}/>}
     />
   );
@@ -118,7 +95,7 @@ const UserList: React.FC<Props> = ({navigation}) => {
         </View>
       ) : error ? (
         <View style={styles.container}>
-          <Text style={styles.errorText}>{error.message}</Text>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : users.length === 0 ? (
         <Text>No Users Found</Text>

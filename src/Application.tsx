@@ -12,15 +12,20 @@ import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator, NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {StatusBar} from 'expo-status-bar';
 import {FontAwesome5} from "@expo/vector-icons";
-import {ApplicationFacade} from "./ApplicationFacade";
-import {ParamList} from "./ApplicationConstants";
+import {Provider} from "react-redux";
 import UserList from "./view/components/UserList";
 import UserForm from "./view/components/UserForm";
 import UserRole from "./view/components/UserRole";
 import {SafeAreaProvider} from "react-native-safe-area-context";
-import {createDefaultUser} from "./model/valueObject/User";
+import {createDefaultUser, User} from "./model/valueObject/User";
+import {Role} from "./model/valueObject/Role";
+import {store} from "./ApplicationStore";
 
-ApplicationFacade.getInstance().startup();
+export type ParamList = {
+  UserList: undefined;
+  UserForm: { user: User, roles?: Role[] };
+  UserRole: { user: User, roles: Role[] };
+};
 
 const Stack = createNativeStackNavigator<ParamList>();
 
@@ -47,14 +52,16 @@ const Application: React.FC = () => {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <Stack.Navigator initialRouteName="UserList">
-          <Stack.Screen name="UserList" component={UserList} options={options} />
-          <Stack.Screen name="UserForm" component={UserForm} options={{title: "User Form"}} />
-          <Stack.Screen name="UserRole" component={UserRole} options={{title: "User Role"}} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <Provider store={store}>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Stack.Navigator initialRouteName="UserList">
+            <Stack.Screen name="UserList" component={UserList} options={options} />
+            <Stack.Screen name="UserForm" component={UserForm} options={{title: "User Form"}} />
+            <Stack.Screen name="UserRole" component={UserRole} options={{title: "User Role"}} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </Provider>
     </SafeAreaProvider>
   );
 }

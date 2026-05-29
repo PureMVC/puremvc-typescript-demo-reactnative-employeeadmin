@@ -6,18 +6,18 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker";
 import {MaterialIcons} from "@expo/vector-icons";
-import {ApplicationConstants, ParamList} from "../../ApplicationConstants";
+import {ParamList} from "../../Application";
+import {useAppDispatch, useAppSelector} from "../../ApplicationStore";
+import {findAllDepartments, findById, save, update} from "../../model/UserThunk";
 import {createDefaultUser, User, validate} from "../../model/valueObject/User";
-import {DEFAULT_DEPARTMENT, Department} from "../../model/valueObject/Department";
-import {ApplicationFacade} from "../../ApplicationFacade";
 import {Role} from "../../model/valueObject/Role";
-import {IUserForm} from "../interfaces/IUserForm";
+import {DEFAULT_DEPARTMENT} from "../../model/valueObject/Department";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserForm">;
@@ -26,72 +26,42 @@ interface Props {
 
 const UserForm: React.FC<Props> = ({navigation, route}) => {
 
-  // State
-  const [departments, setDepartments] = useState<Department[]>([]); // UI Data
-  const [user, setUser] = useState<User>(createDefaultUser()); // User Data
-  const [roles, setRoles] = useState<Role[]>(route.params.roles ?? []); // Roles
+  // Controller
+  const dispatch = useAppDispatch();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  // State
+  const {departments, isLoading, error} = useAppSelector(state => state.UserFormSlice);
+  const [user, setUser] = useState<User>(createDefaultUser());
+  const [roles, setRoles] = useState<Role[]>(route.params.roles ?? []); // Roles
 
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const isAndroid = Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
 
-  const delegate = useRef<IUserForm>({ // No-op implementation overridden by Mediator during registration
-    findAllDepartments: async (_signal: AbortSignal): Promise<Department[]> => departments,
-    findById: async (_id: number, _signal: AbortSignal): Promise<User | null> => user,
-    save: async (_user: User, roles: Role[]): Promise<void> => {},
-    update: async (_user: User, roles: Role[]): Promise<void> => {}
-  }).current;
-
   // Effects
   useEffect(() => {
-    ApplicationFacade.getInstance().register(delegate, ApplicationConstants.USER_FORM);
-    return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_FORM);
-  }, []);
-
-  useEffect(() => { // fetch departments
-    const controller = new AbortController();
-
     void (async () => {
       try {
-        const result = await delegate.findAllDepartments(controller.signal);
-        if (!controller.signal.aborted) setDepartments(result);
+        await dispatch(findAllDepartments()).unwrap();
       } catch (error) {
-        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+        return alert(`Failed to load departments: ${error}`);
       }
-    })();
 
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => { // fetch user details
-    if (departments.length === 0) return;
-
-    const controller = new AbortController();
-
-    void (async () => {
       try {
-        const id = route.params.user?.id ?? 0;
-        if (id === 0) return setIsLoading(false);
+        const { id } = route.params.user;
+        if (!id) return;
 
-        const result = await delegate.findById(id, controller.signal);
-        if (!controller.signal.aborted && result != null) setUser({ ...result, confirm: result.password });
-      } catch (error) {
-        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        const result = await dispatch(findById(id)).unwrap(); // fetch user details
+        setUser({...result, confirm: result.password, roles: result.roles ?? []});
+      } catch(error) {
+        alert(`Failed to load user: ${error}`);
       }
     })();
+  }, [dispatch]);
 
-    return () => controller.abort();
-  }, [departments]);
-
-  useFocusEffect( // receive roles from the UserRole
+  useFocusEffect(
     useCallback(() => {
-      if (route.params.roles)
-        setRoles(route.params.roles);
+      route.params.roles && setRoles(route.params.roles); // receive roles from the UserRole
     }, [route.params.roles])
   );
 
@@ -118,16 +88,14 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   const onSave = async () => {
     const error = validate(user);
-    if (error != null) {
-      alert(error);
-      return;
-    }
+    if (error) return alert(error);
 
     try {
-      user.id === 0 ? await delegate.save(user, roles) : await delegate.update(user, roles);
+      user.roles = roles;
+      user.id === 0 ? await dispatch(save(user)).unwrap() : await dispatch(update(user)).unwrap();
       navigation.goBack();
     } catch (error) {
-      alert("Failed to save user: " + error);
+      alert(`Failed to ${user.id === 0 ? "save" : "update"} user: ${error}`);
     }
   }
 
@@ -217,7 +185,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
         </View>
       ) : error ? (
         <View style={styles.container}>
-          <Text style={styles.errorText}>{error.message}</Text>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.container}>

@@ -1,5 +1,5 @@
 //
-//  RoleProxy.ts
+//  RoleService.ts
 //  PureMVC TypeScript Demo - React Native EmployeeAdmin
 //
 //  Copyright(c) 2026 Saad Shams <saad.shams@puremvc.org>
@@ -7,34 +7,30 @@
 //
 
 import {Platform} from "react-native";
-import {Proxy} from "@puremvc/puremvc-typescript-multicore-framework";
-import {Role} from "./valueObject/Role";
+import {Role} from "../valueObject/Role";
 
-export class RoleProxy extends Proxy {
+export class RoleService {
 
-  public static NAME = "RoleProxy";
-
-  constructor() {
-    super(RoleProxy.NAME, null);
-  }
-
-  public async findAll(signal: AbortSignal): Promise<Role[]> {
+  static async findAll(signal: AbortSignal): Promise<Role[]> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/roles`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
-  public async findByUserId(id: number, signal: AbortSignal): Promise<Role[]> {
+  static async findByUserId(id: number, signal: AbortSignal): Promise<Role[]> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}/roles`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
+
 }

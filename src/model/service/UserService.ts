@@ -1,5 +1,5 @@
 //
-//  UserProxy.ts
+//  UserService.ts
 //  PureMVC TypeScript Demo - React Native EmployeeAdmin
 //
 //  Copyright(c) 2026 Saad Shams <saad.shams@puremvc.org>
@@ -7,54 +7,48 @@
 //
 
 import {Platform} from "react-native";
-import {Proxy} from "@puremvc/puremvc-typescript-multicore-framework";
-import {User} from "./valueObject/User";
-import {Department} from "./valueObject/Department";
+import {User} from "../valueObject/User";
+import {Department} from "../valueObject/Department";
 
-export class UserProxy extends Proxy {
+export class UserService {
 
-  public static NAME = "UserProxy";
+  static async findAll(signal?: AbortSignal): Promise<User[]> {
+    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {signal});
 
-  constructor() {
-    super(UserProxy.NAME, null);
-  }
-
-  public async findAll(signal : AbortSignal): Promise<User[]> {
-    const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {signal})
-    if (response.status === 200) {
-      const data = await response.json();
-      return data.map((user: User) => ({id: user.id, first: user.first, last: user.last}));
-    } else {
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
-  public async findById(id: number, signal: AbortSignal): Promise<User> {
+  static async findById(id: number, signal: AbortSignal): Promise<User> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
-  public async deleteById(id: number): Promise<void> {
+  static async deleteById(id: number, signal?: AbortSignal): Promise<number> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}`, {
         method: "DELETE"
       }
     );
 
-    if (response.status === 204) {
-      return;
-    } else {
+    if (response.status !== 204) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return id;
   }
 
-  async save(user: User) {
+  static async save(user: User) {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {
         method: "POST",
         headers: {"content-type": "application/json"},
@@ -62,15 +56,15 @@ export class UserProxy extends Proxy {
       }
     );
 
-    if (response.status === 201) {
-      return await response.json();
-    } else {
+    if (response.status !== 201) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
-  async update(user: User) {
+  static async update(user: User) {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${user.id}`, {
         method: "PUT",
         headers: {"Content-Type": "application/json"},
@@ -78,22 +72,23 @@ export class UserProxy extends Proxy {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
-  public async findAllDepartments(signal: AbortSignal): Promise<Department[]> {
+  static async findAllDepartments(signal: AbortSignal): Promise<Department[]> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/departments`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
 }
