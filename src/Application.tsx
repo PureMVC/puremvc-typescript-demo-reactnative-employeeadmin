@@ -10,17 +10,24 @@ import React from "react";
 import {TouchableOpacity} from "react-native";
 import {NavigationContainer} from "@react-navigation/native";
 import {createNativeStackNavigator, NativeStackNavigationProp} from "@react-navigation/native-stack";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from 'expo-status-bar';
 import {FontAwesome5} from "@expo/vector-icons";
 import {ApplicationFacade} from "./ApplicationFacade";
-import {ParamList} from "./ApplicationConstants";
 import UserList from "./view/components/UserList";
 import UserForm from "./view/components/UserForm";
 import UserRole from "./view/components/UserRole";
-import {SafeAreaProvider} from "react-native-safe-area-context";
 import {createDefaultUser} from "./model/valueObject/User";
+import {User} from "./model/valueObject/User";
+import {Role} from "./model/valueObject/Role";
 
 ApplicationFacade.getInstance().startup();
+
+export type ParamList = {
+  UserList: undefined;
+  UserForm: { user: User, roles?: Role[] };
+  UserRole: { user: User, roles: Role[] };
+};
 
 const Stack = createNativeStackNavigator<ParamList>();
 
