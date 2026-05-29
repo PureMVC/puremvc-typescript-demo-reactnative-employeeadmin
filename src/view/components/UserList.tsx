@@ -43,12 +43,16 @@ const UserList: React.FC<Props> = ({navigation}) => {
 
       void (async () => {
         try {
-          const result = await delegate.findAll(controller.signal);
-          if (!controller.signal.aborted) setUsers(result);
+          const result = await delegate.findAll(controller.signal); // fetch users
+          if (controller.signal.aborted) return;
+
+          setUsers(result);
         } catch (error) {
-          if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+          if (!controller.signal.aborted)
+            setError(error instanceof Error ? error : new Error(String(error)));
         } finally {
-          if (!controller.signal.aborted) setIsLoading(false);
+          if (!controller.signal.aborted)
+            setIsLoading(false);
         }
       })();
 

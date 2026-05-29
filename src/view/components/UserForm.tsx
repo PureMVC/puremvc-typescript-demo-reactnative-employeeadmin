@@ -51,47 +51,38 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_FORM);
   }, []);
 
-  useEffect(() => { // fetch departments
+  useEffect(() => {
     const controller = new AbortController();
 
     void (async () => {
       try {
-        const result = await delegate.findAllDepartments(controller.signal);
-        if (!controller.signal.aborted) setDepartments(result);
+        const departments = await delegate.findAllDepartments(controller.signal); // fetch departments
+        if (controller.signal.aborted) return;
+
+        setDepartments(departments);
+
+        const {id} = route.params.user;
+        if (id === 0) return;
+
+        const result = await delegate.findById(id, controller.signal); // fetch user details
+        if (controller.signal.aborted || result == null) return;
+
+        setUser({ ...result, confirm: result.password });
       } catch (error) {
-        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        if (!controller.signal.aborted)
+          setIsLoading(false);
       }
     })();
 
     return () => controller.abort();
   }, []);
 
-  useEffect(() => { // fetch user details
-    if (departments.length === 0) return;
-
-    const controller = new AbortController();
-
-    void (async () => {
-      try {
-        const id = route.params.user?.id ?? 0;
-        if (id === 0) return setIsLoading(false);
-
-        const result = await delegate.findById(id, controller.signal);
-        if (!controller.signal.aborted && result != null) setUser({ ...result, confirm: result.password });
-      } catch (error) {
-        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    })();
-
-    return () => controller.abort();
-  }, [departments]);
-
   useFocusEffect( // receive roles from the UserRole
     useCallback(() => {
-      if (route.params.roles)
-        setRoles(route.params.roles);
+      route.params.roles && setRoles(route.params.roles);
     }, [route.params.roles])
   );
 
@@ -118,16 +109,13 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   const onSave = async () => {
     const error = validate(user);
-    if (error != null) {
-      alert(error);
-      return;
-    }
+    if (error != null) return alert(error);
 
     try {
       user.id === 0 ? await delegate.save(user, roles) : await delegate.update(user, roles);
       navigation.goBack();
     } catch (error) {
-      alert("Failed to save user: " + error);
+      alert(`Failed to ${user.id === 0 ? "save" : "update"} user: ${error}`);
     }
   }
 

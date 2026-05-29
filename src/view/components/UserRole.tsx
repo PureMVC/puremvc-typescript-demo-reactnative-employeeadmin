@@ -40,48 +40,34 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
     return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_ROLE);
   }, []);
 
-  useEffect(() => { // fetch roles
+  useEffect(() => {
     const controller = new AbortController();
 
     void (async () => {
       try {
-        let result = await delegate.findAll(controller.signal);
-        if (!controller.signal.aborted) setRoles(result);
+        const roles = await delegate.findAll(controller.signal); // fetch roles
+        if (controller.signal.aborted) return;
+
+        setRoles(roles);
+
+        if (route.params.roles.length !== 0)
+          return setData(route.params.roles);
+
+        const result = await delegate.findByUserId(route.params.user.id, controller.signal); // fetch user roles
+        if (controller.signal.aborted) return;
+
+        setData(result);
       } catch (error) {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted)
           setError(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        if (!controller.signal.aborted)
           setIsLoading(false);
-        }
       }
     })();
 
     return () => controller.abort();
   }, []);
-
-  useEffect(() => { // fetch user roles
-    if (roles.length === 0) return;
-
-    if (route.params.roles.length !== 0) {
-      setIsLoading(false);
-      setData(route.params.roles);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    void (async () => {
-      try {
-        let result = await delegate.findByUserId(route.params.user.id, controller.signal);
-        if (!controller.signal.aborted) setData(result);
-      } catch (error) {
-        if (!controller.signal.aborted) setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    })();
-
-    return () => controller.abort();
-  }, [roles]);
 
   // Handlers
   const onChange = (role: Role) => {

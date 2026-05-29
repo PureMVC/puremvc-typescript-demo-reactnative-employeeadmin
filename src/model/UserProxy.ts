@@ -21,23 +21,25 @@ export class UserProxy extends Proxy {
 
   public async findAll(signal : AbortSignal): Promise<User[]> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users`, {signal})
-    if (response.status === 200) {
-      const data = await response.json();
-      return data.map((user: User) => ({id: user.id, first: user.first, last: user.last}));
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    const data = await response.json();
+    return data.map((user: User) => ({id: user.id, first: user.first, last: user.last}));
   }
 
   public async findById(id: number, signal: AbortSignal): Promise<User> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/users/${id}`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
   public async deleteById(id: number): Promise<void> {
@@ -46,9 +48,7 @@ export class UserProxy extends Proxy {
       }
     );
 
-    if (response.status === 204) {
-      return;
-    } else {
+    if (response.status !== 204) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
@@ -62,12 +62,12 @@ export class UserProxy extends Proxy {
       }
     );
 
-    if (response.status === 201) {
-      return await response.json();
-    } else {
+    if (response.status !== 201) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
   async update(user: User) {
@@ -78,22 +78,23 @@ export class UserProxy extends Proxy {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
   public async findAllDepartments(signal: AbortSignal): Promise<Department[]> {
     const response = await fetch(`${Platform.OS === "android" ? "http://10.0.2.2" : "http://127.0.0.1"}/departments`, {signal});
-    if (response.status === 200) {
-      return await response.json();
-    } else {
+
+    if (response.status !== 200) {
       const error = await response.json().catch(() => null);
       throw new Error(error?.message ?? `Request failed: ${response.status}`);
     }
+
+    return await response.json();
   }
 
 }
