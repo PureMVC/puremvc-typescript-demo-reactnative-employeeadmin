@@ -12,8 +12,8 @@ import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {useFocusEffect} from "@react-navigation/native";
 import {ParamList} from "../../Application";
 import {ApplicationConstants} from "../../ApplicationConstants";
-import {User} from "../../model/valueObject/User";
 import {ApplicationFacade} from "../../ApplicationFacade";
+import {User} from "../../model/valueObject/User";
 import {IUserList} from "../interfaces/IUserList";
 
 interface Props {
