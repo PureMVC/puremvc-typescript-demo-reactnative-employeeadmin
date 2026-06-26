@@ -16,10 +16,19 @@ This demo illustrates techniques for performing routine client-side maintenance 
 
 ## ⚙️ Installation
 
+### 📱 Run Services
+```shell
+git clone https://github.com/PureMVC/puremvc-js-demo-microservice-employeeadmin
+cd puremvc-js-demo-microservice-employeeadmin
+git checkout graphql
+docker compose up
+```
+
 ### 📱 Run React Native Project
 ```shell
 git clone https://github.com/PureMVC/puremvc-typescript-demo-reactnative-employeeadmin
 cd puremvc-typescript-demo-reactnative-employeeadmin
+npm install
 npm start
 ```
 
