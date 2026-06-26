@@ -6,19 +6,17 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker";
 import {MaterialIcons} from "@expo/vector-icons";
 import {ParamList} from "../../Application";
-import {ApplicationConstants} from "../../ApplicationConstants";
-import {createDefaultUser, User, validate} from "../../model/valueObject/User";
-import {DEFAULT_DEPARTMENT, Department} from "../../model/valueObject/Department";
-import {ApplicationFacade} from "../../ApplicationFacade";
-import {Role} from "../../model/valueObject/Role";
-import {IUserForm} from "../interfaces/IUserForm";
+import {User, validate} from "../../domain/model/User";
+import {DEFAULT_DEPARTMENT} from "../../domain/model/Department";
+import {Role} from "../../domain/model/Role";
+import {useUserForm} from "../UserFormHooks";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserForm">;
@@ -28,58 +26,35 @@ interface Props {
 const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const [departments, setDepartments] = useState<Department[]>([]); // UI Data
-  const [user, setUser] = useState<User>(createDefaultUser()); // User Data
-  const [roles, setRoles] = useState<Role[]>(route.params.roles ?? []); // Roles
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const {loading, error, departments, user, setUser, findAllDepartments, findById, save, update} = useUserForm();
+  const [confirm, setConfirm] = useState<string>("");
+  const [roles, setRoles] = useState<Role[] | null>(route.params.roles ?? null);
 
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const isAndroid = Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
 
-  const delegate = useRef<IUserForm>({ // No-op implementation overridden by Mediator during registration
-    findAllDepartments: async (_signal: AbortSignal): Promise<Department[]> => departments,
-    findById: async (_id: number, _signal: AbortSignal): Promise<User | null> => user,
-    save: async (_user: User, roles: Role[]): Promise<void> => {},
-    update: async (_user: User, roles: Role[]): Promise<void> => {}
-  }).current;
-
   // Effects
-  useEffect(() => {
-    ApplicationFacade.getInstance().register(delegate, ApplicationConstants.USER_FORM);
-    return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_FORM);
-  }, []);
-
   useEffect(() => {
     const controller = new AbortController();
 
     void (async () => {
-      try {
-        const departments = await delegate.findAllDepartments(controller.signal); // fetch departments
-        if (controller.signal.aborted) return;
+      await findAllDepartments(controller.signal)
+      if (controller.signal.aborted) return;
 
-        setDepartments(departments);
+      const {id} = route.params.user;
+      if (id === 0) return;
 
-        const {id} = route.params.user;
-        if (id === 0) return;
-
-        const result = await delegate.findById(id, controller.signal); // fetch user details
-        if (controller.signal.aborted || result == null) return;
-
-        setUser({ ...result, confirm: result.password });
-      } catch (error) {
-        if (!controller.signal.aborted)
-          setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        if (!controller.signal.aborted)
-          setIsLoading(false);
-      }
+      await findById(id, controller.signal);
+      if (controller.signal.aborted) return;
     })();
 
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    setConfirm(user.password);
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -109,30 +84,31 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onSave = async () => {
-    const error = validate(user);
+    if (!user) return;
+    const error = validate(user, confirm);
     if (error != null) return alert(error);
 
     try {
-      user.id === 0 ? await delegate.save(user, roles) : await delegate.update(user, roles);
-      navigation.goBack();
+      user.id === 0 ? await save(user, roles) : await update(user, roles);
+      navigation.popTo("UserList", {user: user});
     } catch (error) {
       alert(`Failed to ${user.id === 0 ? "save" : "update"} user: ${error}`);
     }
   }
 
   const onCancel = () => {
-    navigation.goBack();
+    navigation.popTo("UserList", {user: null});
   }
 
   // UI Helpers
   const First = () => (
     <TextInput style={styles.input} placeholder="First Name" value={user.first}
-               onChangeText={(value) => onChange("first", value)}/>
+               onChangeText={(value) => onChange("first", value)} />
   );
 
   const Last = () => (
     <TextInput style={styles.input} placeholder="Last Name" value={user.last}
-               onChangeText={(value) => onChange("last", value)}/>
+               onChangeText={(value) => onChange("last", value)} />
   );
 
   const Email = () => (
@@ -144,17 +120,17 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   const Username = () => (
     <TextInput style={[styles.input, user.id !== 0 && styles.disabled]} placeholder="Username"
                value={user?.username} autoCapitalize="none" autoCorrect={false} editable={user.id === 0}
-               onChangeText={(value) => onChange("username", value)}/>
+               onChangeText={(value) => onChange("username", value)} />
   );
 
   const Password = () => (
     <TextInput style={styles.input} placeholder="Password" value={user?.password} secureTextEntry={true}
-               onChangeText={(value) => setUser(({...user, password: value} as User))}/>
+               onChangeText={(value) => setUser(({...user, password: value} as User))} />
   );
 
   const Confirm = () => (
-    <TextInput style={styles.input} placeholder="Confirm" value={user?.confirm} secureTextEntry={true}
-               onChangeText={(value) => setUser(({...user, confirm: value} as User))}/>
+    <TextInput style={styles.input} placeholder="Confirm" value={confirm} secureTextEntry={true}
+               onChangeText={(value) => setConfirm(value)} />
   );
 
   const Department = () => (
@@ -164,17 +140,21 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
           <Text style={styles.iosDisplayText}>
             {departments.find((department) => department.id === user.department.id)?.name ?? DEFAULT_DEPARTMENT.name}
           </Text>
-          <MaterialIcons name={isPickerVisible ? "arrow-drop-up" : "arrow-drop-down"} size={24} color="#666" style={styles.arrow}/>
+          <MaterialIcons name={isPickerVisible ? "arrow-drop-up" : "arrow-drop-down"} size={24} color="#666" style={styles.arrow} />
         </TouchableOpacity>
       )}
 
       {(isAndroid || (isIOS && isPickerVisible)) && (
-        <Picker itemStyle={{fontSize: 16}} selectedValue={user.department.id} onValueChange={onValueChange}
-                style={isAndroid ? undefined : styles.iosPicker} mode={isAndroid ? "dropdown" : undefined}>
-          <Picker.Item label={DEFAULT_DEPARTMENT.name} value={0}/>
-          {departments.map((department) => (
-            <Picker.Item key={department.id.toString()} label={department.name} value={department.id}/>
-          ))}
+        <Picker
+          selectedValue={user.department.id}
+          onValueChange={onValueChange}
+          style={isAndroid ? styles.androidPicker : styles.iosPicker}
+          itemStyle={isIOS ? styles.iosPickerItem : undefined}
+          mode={isAndroid ? "dropdown" : undefined}>
+            <Picker.Item label={DEFAULT_DEPARTMENT.name} value={0} />
+            {departments.map((department) => (
+              <Picker.Item key={department.id.toString()} label={department.name} value={department.id} />
+            ))}
         </Picker>
       )}
     </View>
@@ -200,7 +180,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   return (
     <>
-      { isLoading ? (
+      { loading ? (
         <View style={styles.spinner}>
           <ActivityIndicator size="large" />
         </View>
@@ -305,6 +285,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     justifyContent: "center",
     height: 40,
+    overflow: "hidden",
+  },
+  androidPicker: {
+    height: 50
   },
   iosContainer: {
     flex: 1,
@@ -344,6 +328,10 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.15,
     shadowRadius: 4,
+  },
+  iosPickerItem: {
+    fontSize: 16,
+    height: 120,
   },
   errorText: {
     color: "red",

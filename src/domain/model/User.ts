@@ -16,9 +16,8 @@ export interface User {
   last: string;
   email: string;
   password: string;
-  confirm: string;
   department: Department;
-  roles: Role[];
+  roles: Role[] | null;
 }
 
 export function createDefaultUser(): User {
@@ -29,13 +28,12 @@ export function createDefaultUser(): User {
     last: "",
     email: "",
     password: "",
-    confirm: "",
     department: DEFAULT_DEPARTMENT,
-    roles: [],
+    roles: null,
   };
 }
 
-export function validate(user: User): string | null {
+export function validate(user: User, confirm: string): string | null {
   if (!user.username.trim()) return "Username is required.";
   if (!user.first.trim()) return "First name is required.";
   if (!user.last.trim()) return "Last name is required.";
@@ -45,8 +43,8 @@ export function validate(user: User): string | null {
   if (!emailRegex.test(user.email)) return "Invalid email format.";
 
   if (!user.password.trim()) return "Password is required.";
-  if (!user.confirm.trim()) return "Confirm password is required.";
-  if (user.password !== user.confirm) return "Password and confirm password must match.";
+  if (!confirm.trim()) return "Confirm password is required.";
+  if (user.password !== confirm) return "Password and confirm password must match.";
 
   if (user.department.id === DEFAULT_DEPARTMENT.id) return "Please select a department.";
 

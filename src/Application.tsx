@@ -13,20 +13,18 @@ import {createNativeStackNavigator, NativeStackNavigationProp} from "@react-navi
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import {StatusBar} from 'expo-status-bar';
 import {FontAwesome5} from "@expo/vector-icons";
-import {ApplicationFacade} from "./ApplicationFacade";
-import UserList from "./view/components/UserList";
-import UserForm from "./view/components/UserForm";
-import UserRole from "./view/components/UserRole";
-import {createDefaultUser} from "./model/valueObject/User";
-import {User} from "./model/valueObject/User";
-import {Role} from "./model/valueObject/Role";
-
-ApplicationFacade.getInstance().startup();
+import UserList from "./presentation/components/UserList";
+import UserForm from "./presentation/components/UserForm";
+import UserRole from "./presentation/components/UserRole";
+import {createDefaultUser} from "./domain/model/User";
+import {User} from "./domain/model/User";
+import {Role} from "./domain/model/Role";
+import {ContextProvider} from "./ApplicationContext";
 
 export type ParamList = {
-  UserList: undefined;
+  UserList: { user: User | null } | undefined;
   UserForm: { user: User, roles?: Role[] };
-  UserRole: { user: User, roles: Role[] };
+  UserRole: { user: User, roles?: Role[] | null };
 };
 
 const Stack = createNativeStackNavigator<ParamList>();
@@ -53,16 +51,18 @@ const Application: React.FC = () => {
   }
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <Stack.Navigator initialRouteName="UserList">
-          <Stack.Screen name="UserList" component={UserList} options={options} />
-          <Stack.Screen name="UserForm" component={UserForm} options={{title: "User Form"}} />
-          <Stack.Screen name="UserRole" component={UserRole} options={{title: "User Role"}} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <ContextProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <Stack.Navigator initialRouteName="UserList">
+            <Stack.Screen name="UserList" component={UserList} options={options} />
+            <Stack.Screen name="UserForm" component={UserForm} options={{title: "User Form"}} />
+            <Stack.Screen name="UserRole" component={UserRole} options={{title: "User Role"}} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ContextProvider>
   );
 }
 

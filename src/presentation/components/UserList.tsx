@@ -6,59 +6,41 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useRef} from "react";
 import {ActivityIndicator, Animated, FlatList, PanResponder, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
-import {useFocusEffect} from "@react-navigation/native";
+import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {ParamList} from "../../Application";
-import {ApplicationConstants} from "../../ApplicationConstants";
-import {ApplicationFacade} from "../../ApplicationFacade";
-import {User} from "../../model/valueObject/User";
-import {IUserList} from "../interfaces/IUserList";
+import {User} from "../../domain/model/User";
+import {useUserList} from "../UserListHooks";
+import {deleteUserUseCase} from "../../business/DeleteUserUseCase";
+import {userService} from "../../domain/UserService";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserList">;
+  route: RouteProp<ParamList, "UserList">;
 }
 
-const UserList: React.FC<Props> = ({navigation}) => {
+const UserList: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const [users, setUsers] = useState<User[]>([]); // User Data
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  const delegate = useRef<IUserList>({ // No-op implementation overridden by Mediator during registration
-    findAll: async (_signal: AbortSignal) => users,
-    deleteById: async (_id: number) => {}
-  }).current;
+  const {loading, error, users, setUsers, findAll} = useUserList();
 
   // Effects
-  useEffect(() => {
-    ApplicationFacade.getInstance().register(delegate, ApplicationConstants.USER_LIST)
-    return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_LIST);
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       const controller = new AbortController();
 
-      void (async () => {
-        try {
-          const result = await delegate.findAll(controller.signal); // fetch users
-          if (controller.signal.aborted) return;
+      const user = route.params?.user; // updated
+      if (user && user.id !== 0) {
+        setUsers(prev => prev.map(current => current.id === user.id ? user : current));
+        return;
+      }
 
-          setUsers(result);
-        } catch (error) {
-          if (!controller.signal.aborted)
-            setError(error instanceof Error ? error : new Error(String(error)));
-        } finally {
-          if (!controller.signal.aborted)
-            setIsLoading(false);
-        }
-      })();
-
+      findAll(controller.signal).then();  // saved or on launch
       return () => controller.abort();
-    }, [])
+
+    }, [findAll, route.params?.user])
   );
 
   // UI Components
@@ -80,12 +62,8 @@ const UserList: React.FC<Props> = ({navigation}) => {
     ).current;
 
     const onDelete = async () => {
-      try {
-        await delegate.deleteById(user.id!);
-        setUsers((prev) => prev.filter((current) => current.id !== user.id));
-      } catch (error) {
-        setError(error instanceof Error ? error : new Error(String(error)));
-      }
+      const success = await deleteUserUseCase(userService).execute(user.id);
+      if (success) setUsers((prev) => prev.filter((current) => current.id !== user.id));
     }
 
     const onEdit = () => {
@@ -110,14 +88,18 @@ const UserList: React.FC<Props> = ({navigation}) => {
   // UI Helpers
   const List = () => (
     <FlatList<User>
-      data={users} keyExtractor={(user) => `user_${user.id}`}
-      renderItem={({ item }) => <ListItem user={item}/>}
+      data={users}
+      refreshing={loading}
+      keyExtractor={(user) => `user_${user.id}`}
+      renderItem={({ item }) => (
+        <ListItem user={item}/>
+      )}
     />
   );
 
   return (
     <>
-      { isLoading ? (
+      { loading ? (
         <View style={styles.spinner}>
           <ActivityIndicator size="large" />
         </View>

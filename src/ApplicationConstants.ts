@@ -6,14 +6,8 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
+import {Platform} from "react-native";
+
 export class ApplicationConstants {
-  public static KEY: string = "employeeAdmin";
-
-  public static STARTUP: string = "startup";
-  public static REGISTER: string = "register";
-  public static UNREGISTER: string = "unregister";
-
-  static USER_LIST = "userList";
-  static USER_FORM = "userForm";
-  static USER_ROLE = "userRole";
+  static URL = Platform.OS === "android" ? "http://10.0.2.2/graphql" : "http://localhost/graphql";
 }

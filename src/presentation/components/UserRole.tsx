@@ -6,16 +6,14 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect} from "react";
 import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
 import {ParamList} from "../../Application";
-import {ApplicationConstants} from "../../ApplicationConstants";
-import {Role} from "../../model/valueObject/Role";
-import {ApplicationFacade} from "../../ApplicationFacade";
-import {IUserRole} from "../interfaces/IUserRole";
+import {Role} from "../../domain/model/Role";
+import {useUserRole} from "../UserRoleHooks";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserRole">;
@@ -25,46 +23,19 @@ interface Props {
 const UserRole: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const [roles, setRoles] = useState<Role[]>([]); // UI Data
-  const [data, setData] = useState<Role[]>([]); // User Data
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const delegate = useRef<IUserRole>({ // No-op implementation overridden by Mediator during registration
-    findAll: async (_signal: AbortSignal): Promise<Role[]> => roles,
-    findByUserId: async (_id: number, _signal): Promise<Role[]> => data
-  }).current;
+  const {loading, error, roles, data, setData, findAll, findByUserId} = useUserRole();
 
   // Effects
-  useEffect(() => {
-    ApplicationFacade.getInstance().register(delegate, ApplicationConstants.USER_ROLE);
-    return () => ApplicationFacade.getInstance().unregister(ApplicationConstants.USER_ROLE);
-  }, []);
-
   useEffect(() => {
     const controller = new AbortController();
 
     void (async () => {
-      try {
-        const roles = await delegate.findAll(controller.signal); // fetch roles
-        if (controller.signal.aborted) return;
+      await findAll(controller.signal);
 
-        setRoles(roles);
+      if (route.params.roles && route.params.roles.length !== 0)
+        return setData(route.params.roles);
 
-        if (route.params.roles.length !== 0)
-          return setData(route.params.roles);
-
-        const result = await delegate.findByUserId(route.params.user.id, controller.signal); // fetch user roles
-        if (controller.signal.aborted) return;
-
-        setData(result);
-      } catch (error) {
-        if (!controller.signal.aborted)
-          setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        if (!controller.signal.aborted)
-          setIsLoading(false);
-      }
+      await findByUserId(route.params.user.id, controller.signal);
     })();
 
     return () => controller.abort();
@@ -86,7 +57,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onCancel = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: []});
+    navigation.popTo("UserForm", {user: route.params.user, roles: route.params.roles ?? []});
   }
 
   // UI Helpers
@@ -111,7 +82,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
 
   return (
     <>
-      { isLoading ? (
+      { loading ? (
         <View style={styles.spinner}>
           <ActivityIndicator size="large" />
         </View>
