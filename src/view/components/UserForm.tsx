@@ -7,7 +7,7 @@
 //
 
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker";
@@ -181,21 +181,27 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   );
 
   const Roles = () => (
-    <TouchableOpacity style={[styles.button, styles.roles]} onPress={onRoles}>
+    <Pressable
+      onPress={onRoles}
+      style={({pressed}) => [styles.button, styles.roles, pressed && { opacity: 0.7}]}>
       <Text style={styles.buttonText}>ROLES</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const Cancel = () => (
-    <TouchableOpacity style={[styles.button, styles.cancel]} onPress={onCancel}>
+    <Pressable
+      onPress={onCancel}
+      style={({pressed}) => [styles.button, styles.cancel, pressed && { opacity: 0.7 }]}>
       <Text style={styles.buttonText}>CANCEL</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const Save = () => (
-    <TouchableOpacity style={[styles.button, styles.save]} onPress={onSave}>
+    <Pressable
+      onPress={onSave}
+      style={({pressed}) => [styles.button, styles.save, pressed && { opacity: 0.7 }]}>
       <Text style={styles.buttonText}>{route.params.user.id ? "UPDATE" : "SAVE"}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
