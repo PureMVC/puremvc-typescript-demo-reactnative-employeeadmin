@@ -6,8 +6,8 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useEffect, useState} from "react";
-import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, {useEffect, useRef, useState} from "react";
+import {ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
@@ -15,6 +15,7 @@ import {ParamList} from "../../Application";
 import {useAppDispatch, useAppSelector} from "../../ApplicationStore";
 import {findAll, findByUserId} from "../../model/RoleThunk";
 import {Role} from "../../model/valueObject/Role";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserRole">;
@@ -85,12 +86,22 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   );
 
   const Cancel = () => (
-    <Button title="Cancel" onPress={onCancel} />
+    <Pressable
+      onPress={onCancel}
+      style={({pressed}) => [styles.button, styles.cancel, pressed && { opacity: 0.7}]}>
+      <Text style={styles.buttonText}>Cancel</Text>
+    </Pressable>
   );
 
   const Save = () => (
-    <Button title="Save" onPress={onSave} />
+    <Pressable
+      onPress={onSave}
+      style={({pressed}) => [styles.button, styles.save, pressed && { opacity: 0.7 }]}>
+      <Text style={styles.buttonText}>Save</Text>
+    </Pressable>
   );
+
+  const insets = useSafeAreaInsets();
 
   return (
     <>
@@ -151,7 +162,8 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     justifyContent: "space-around",
-    padding: 10,
+    paddingTop: 10,
+    paddingHorizontal: 10,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderColor: "#ddd",
@@ -160,7 +172,24 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginTop: 20,
-  }
+  },
+  button: {
+    flex: 1,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    paddingVertical: 8,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    textAlign: "center"
+  },
+  cancel: {
+    backgroundColor: "#D32F2F",
+  },
+  save: {
+    backgroundColor: "#4CAF50",
+  },
 });
 
 export default UserRole;
