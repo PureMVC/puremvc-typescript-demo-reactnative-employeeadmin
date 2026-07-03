@@ -1,0 +1,74 @@
+###
+###  role.http
+###  PureMVC JS Demo - EmployeeAdmin Microservice
+###
+###  Copyright(c) 2023-2026 Saad Shams <saad.shams@puremvc.org>
+###  Your reuse is governed by the BSD 3-Clause License
+###
+
+### FindAllRoles
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindAllRoles { findAllRoles { id name } }"
+}
+
+### FindRolesByUserId #1
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindRolesByUserId($id: ID!) { findRolesByUserId(id: $id) { id name } }",
+  "variables": {
+    "id": 1
+  }
+}
+
+### FindRolesByUserId #2
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindRolesByUserId($id: ID!) { findRolesByUserId(id: $id) { id name } }",
+  "variables": {
+    "id": 2
+  }
+}
+
+### FindRolesByUserId #3
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindRolesByUserId($id: ID!) { findRolesByUserId(id: $id) { id name } }",
+  "variables": {
+    "id": 3
+  }
+}
+
+### UpdateRolesByUserId
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "mutation UpdateRolesByUserId($id: ID!, $roles: [IRole!]!) { updateRolesByUserId(id: $id, roles: $roles) }",
+  "variables": {
+    "id": 49,
+    "roles": [
+      {
+        "id": "1",
+        "name": "Administrator"
+      },
+      {
+        "id": "2",
+        "name": "Accounts Payable"
+      }
+    ]
+  }
+}

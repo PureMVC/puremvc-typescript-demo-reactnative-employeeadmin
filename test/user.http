@@ -1,0 +1,106 @@
+###
+###  user.http
+###  PureMVC JS Demo - EmployeeAdmin Microservice
+###
+###  Copyright(c) 2023-2026 Saad Shams <saad.shams@puremvc.org>
+###  Your reuse is governed by the BSD 3-Clause License
+###
+
+### FindAll
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindAll { findAll { id, first, last } }"
+}
+
+### FindById
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindById($id: ID!) { findById(id: $id) { id username first last email password department { id name } } }",
+  "variables": {
+    "id": 1
+  }
+}
+
+### DeleteById
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "mutation DeleteById($id: ID!) { deleteById(id: $id) }",
+  "variables": {
+    "id": 4
+  }
+}
+
+### Save
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "mutation Save($user: IUser!) { save(user: $user) { id, username first last email password department { id name } roles { id name } } }",
+  "variables": {
+    "user": {
+      "username": "sshemp",
+      "first": "Shemp",
+      "last": "Stooge",
+      "email": "sshemp@stooges.com",
+      "password": "ghi123",
+      "department": {
+        "id": "2",
+        "name": "Sales"
+      },
+      "roles": [
+        {
+          "id": "6",
+          "name": "Payroll"
+        }
+      ]
+    }
+  }
+}
+
+### Update
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "mutation Update($user: IUser!) { update(user: $user) { id username first last email department { id name } roles { id name } } }",
+  "variables": {
+    "user": {
+      "id": 49,
+      "username": "sshemp",
+      "first": "Shemp",
+      "last": "Stooge",
+      "email": "sshemp@stooges.com",
+      "password": "ghi123",
+      "department": {
+        "id": "2",
+        "name": "Sales"
+      },
+      "roles": [
+        {
+          "id": "1",
+          "name": "Administrator"
+        }
+      ]
+    }
+  }
+}
+
+### FindAllDepartments
+POST http://localhost/graphql
+Content-Type: application/json
+Accept: application/json
+
+{
+  "query": "query FindAllDepartments { findAllDepartments { id name } }"
+}
