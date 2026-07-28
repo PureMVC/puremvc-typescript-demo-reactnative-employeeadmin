@@ -6,7 +6,7 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
