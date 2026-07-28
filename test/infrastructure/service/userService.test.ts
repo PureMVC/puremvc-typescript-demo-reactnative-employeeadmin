@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { userService } from "../../src/domain/UserService";
+import { userService } from "../../../src/domain/service/IUserService";
 
 describe("userService integration", () => {
 

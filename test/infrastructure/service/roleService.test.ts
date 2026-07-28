@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleService } from "../../src/domain/RoleService";
+import {roleService} from "../../../src/infrastructure/service/RoleService";
 
 describe("roleService integration", () => {
   it("findAll should fetch roles from real API", async () => {
@@ -17,6 +17,7 @@ describe("roleService integration", () => {
 
   it("findByUserId should fetch roles for a real user", async () => {
     const roles = await roleService.findByUserId(1);
+    console.log(roles);
 
     expect(Array.isArray(roles)).toBe(true);
 

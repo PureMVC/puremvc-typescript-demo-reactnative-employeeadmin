@@ -1,23 +1,15 @@
 //
-//  UserService.ts
+//  IUserService.ts
 //  PureMVC TypeScript Demo - React Native EmployeeAdmin
 //
 //  Copyright(c) 2026 Saad Shams <saad.shams@puremvc.org>
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import {User} from "./model/User";
-import {Department} from "./model/Department";
-import {ApplicationConstants} from "../ApplicationConstants";
-
-export interface IUserService {
-  findAll(signal?: AbortSignal): Promise<User[]>;
-  findById(id: number, signal?: AbortSignal): Promise<User | null>;
-  deleteById(id: number, signal?: AbortSignal): Promise<boolean>;
-  save(user: Omit<User, "id">, signal?: AbortSignal): Promise<User>;
-  update(user: User, signal?: AbortSignal): Promise<User>;
-  findAllDepartments(signal?: AbortSignal): Promise<Department[]>;
-}
+import {IUserService} from "../../domain/service/IUserService";
+import {ApplicationConstants} from "../../ApplicationConstants";
+import {User} from "../../domain/model/User";
+import {Department} from "../../domain/model/Department";
 
 export const userService: IUserService = {
 
@@ -33,7 +25,6 @@ export const userService: IUserService = {
           query {
             findAll {
               id
-              username
               first
               last
             }
@@ -125,24 +116,8 @@ export const userService: IUserService = {
       },
       body: JSON.stringify({
         query: `
-          mutation Save(
-            $username: String!,
-            $first: String!,
-            $last: String!,
-            $email: String!,
-            $password: String!,
-            $department: IDepartment!,
-            $roles: [IRole!]
-          ) {
-            save(
-              username: $username,
-              first: $first,
-              last: $last,
-              email: $email,
-              password: $password,
-              department: $department,
-              roles: $roles
-            ) {
+          mutation Save($user: IUser!) {
+            save(user: $user) {
               id
               username
               first
@@ -154,13 +129,15 @@ export const userService: IUserService = {
           }
         `,
         variables: {
-          username: user.username,
-          first: user.first,
-          last: user.last,
-          email: user.email,
-          password: user.password,
-          department: user.department,
-          roles: user.roles
+          user: {
+            username: user.username,
+            first: user.first,
+            last: user.last,
+            email: user.email,
+            password: user.password,
+            department: user.department,
+            roles: user.roles
+          }
         },
       }),
       signal: signal
@@ -181,26 +158,8 @@ export const userService: IUserService = {
       },
       body: JSON.stringify({
         query: `
-          mutation(
-            $id: ID!,
-            $username: String!,
-            $first: String!,
-            $last: String!,
-            $email: String!,
-            $password: String!,
-            $department: IDepartment!,
-            $roles: [IRole!]
-          ) {
-            update(
-              id: $id,
-              username: $username,
-              first: $first,
-              last: $last,
-              email: $email,
-              password: $password,
-              department: $department,
-              roles: $roles
-            ) {
+          mutation($user: IUser!) {
+            update(user: $user) {
               id
               username
               first
@@ -219,14 +178,16 @@ export const userService: IUserService = {
           }
         `,
         variables: {
-          id: user.id,
-          username: user.username,
-          first: user.first,
-          last: user.last,
-          email: user.email,
-          password: user.password,
-          department: user.department,
-          roles: user.roles
+          user: {
+            id: user.id,
+            username: user.username,
+            first: user.first,
+            last: user.last,
+            email: user.email,
+            password: user.password,
+            department: user.department,
+            roles: user.roles
+          }
         }
       }),
       signal: signal

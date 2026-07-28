@@ -7,8 +7,8 @@
 //
 
 import React, { createContext, useContext } from "react";
-import { userService } from "./domain/UserService";
-import { roleService } from "./domain/RoleService";
+import {userService} from "./infrastructure/service/UserService";
+import {roleService} from "./infrastructure/service/RoleService";
 
 export interface IContext {
   userService: typeof userService;

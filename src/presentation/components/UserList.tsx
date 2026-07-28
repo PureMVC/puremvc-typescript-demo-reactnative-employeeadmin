@@ -14,7 +14,7 @@ import {ParamList} from "../../Application";
 import {User} from "../../domain/model/User";
 import {useUserList} from "../UserListHooks";
 import {deleteUserUseCase} from "../../business/DeleteUserUseCase";
-import {userService} from "../../domain/UserService";
+import {userService} from "../../infrastructure/service/UserService";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserList">;
@@ -67,7 +67,7 @@ const UserList: React.FC<Props> = ({navigation, route}) => {
     }
 
     const onEdit = () => {
-      navigation.navigate("UserForm", {user: user});
+      navigation.navigate("UserForm", {id: user.id});
     }
 
     return (

@@ -7,7 +7,7 @@
 //
 
 import React, {useCallback, useEffect, useState} from "react";
-import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {Picker} from "@react-native-picker/picker";
@@ -26,7 +26,7 @@ interface Props {
 const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const {loading, error, departments, user, setUser, findAllDepartments, findById, save, update} = useUserForm();
+  const {loading, error, departments, user, setUser, findAllDepartments, findById, save} = useUserForm();
   const [confirm, setConfirm] = useState<string>("");
   const [roles, setRoles] = useState<Role[] | null>(route.params.roles ?? null);
 
@@ -39,13 +39,12 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     const controller = new AbortController();
 
     void (async () => {
-      await findAllDepartments(controller.signal)
+      await findAllDepartments(controller.signal);
       if (controller.signal.aborted) return;
 
-      const {id} = route.params.user;
-      if (id === 0) return;
+      if (route.params.id === 0) return;
 
-      await findById(id, controller.signal);
+      await findById(route.params.id, controller.signal);
       if (controller.signal.aborted) return;
     })();
 
@@ -80,7 +79,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onRoles = () => {
-    navigation.navigate("UserRole", {user: user, roles: roles});
+    navigation.navigate("UserRole", {id: route.params.id, roles: roles});
   }
 
   const onSave = async () => {
@@ -89,7 +88,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
     if (error != null) return alert(error);
 
     try {
-      user.id === 0 ? await save(user, roles) : await update(user, roles);
+      await save(user, roles);
       navigation.popTo("UserList", {user: user});
     } catch (error) {
       alert(`Failed to ${user.id === 0 ? "save" : "update"} user: ${error}`);
@@ -161,21 +160,27 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   );
 
   const Roles = () => (
-    <TouchableOpacity style={[styles.button, styles.roles]} onPress={onRoles}>
+    <Pressable
+      onPress={onRoles}
+      style={({pressed}) => [styles.button, styles.roles, pressed && { opacity: 0.7}]}>
       <Text style={styles.buttonText}>ROLES</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const Cancel = () => (
-    <TouchableOpacity style={[styles.button, styles.cancel]} onPress={onCancel}>
+    <Pressable
+      onPress={onCancel}
+      style={({pressed}) => [styles.button, styles.cancel, pressed && { opacity: 0.7 }]}>
       <Text style={styles.buttonText}>CANCEL</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   const Save = () => (
-    <TouchableOpacity style={[styles.button, styles.save]} onPress={onSave}>
-      <Text style={styles.buttonText}>{route.params.user.id ? "UPDATE" : "SAVE"}</Text>
-    </TouchableOpacity>
+    <Pressable
+      onPress={onSave}
+      style={({pressed}) => [styles.button, styles.save, pressed && { opacity: 0.7 }]}>
+      <Text style={styles.buttonText}>{route.params.id ? "UPDATE" : "SAVE"}</Text>
+    </Pressable>
   );
 
   return (

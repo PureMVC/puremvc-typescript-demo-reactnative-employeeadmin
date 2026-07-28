@@ -7,7 +7,7 @@
 //
 
 import React, {useEffect} from "react";
-import {ActivityIndicator, Button, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
 import {NativeStackNavigationProp} from "@react-navigation/native-stack";
 import {RouteProp} from "@react-navigation/native";
 import Checkbox from "expo-checkbox";
@@ -35,7 +35,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
       if (route.params.roles && route.params.roles.length !== 0)
         return setData(route.params.roles);
 
-      await findByUserId(route.params.user.id, controller.signal);
+      await findByUserId(route.params.id, controller.signal);
     })();
 
     return () => controller.abort();
@@ -53,31 +53,39 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onSave = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: data});
+    navigation.popTo("UserForm", {id: route.params.id, roles: data});
   }
 
   const onCancel = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: route.params.roles ?? []});
+    navigation.popTo("UserForm", {id: route.params.id});
   }
 
   // UI Helpers
   const List = () => (
     <>
       {roles?.map((role: Role) => (
-        <TouchableOpacity key={`${role.id}`} style={styles.item} onPress={() => onChange(role)} activeOpacity={0.7}>
+        <Pressable key={role.id} style={styles.item} onPress={() => onChange(role)}>
           <Checkbox value={data.some(current => current.id === role.id)} onValueChange={() => onChange(role)}/>
           <Text style={styles.label}>{role.name}</Text>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </>
   );
 
   const Cancel = () => (
-    <Button title="Cancel" onPress={onCancel} />
+    <Pressable
+      onPress={onCancel}
+      style={({pressed}) => [styles.button, styles.cancel, pressed && { opacity: 0.7}]}>
+      <Text style={styles.buttonText}>Cancel</Text>
+    </Pressable>
   );
 
   const Save = () => (
-    <Button title="Save" onPress={onSave} />
+    <Pressable
+      onPress={onSave}
+      style={({pressed}) => [styles.button, styles.save, pressed && { opacity: 0.7 }]}>
+      <Text style={styles.buttonText}>Save</Text>
+    </Pressable>
   );
 
   return (
@@ -148,7 +156,24 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginTop: 20,
-  }
+  },
+  button: {
+    flex: 1,
+    borderRadius: 5,
+    marginHorizontal: 5,
+    paddingVertical: 8,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    textAlign: "center"
+  },
+  cancel: {
+    backgroundColor: "#D32F2F",
+  },
+  save: {
+    backgroundColor: "#4CAF50",
+  },
 });
 
 export default UserRole;

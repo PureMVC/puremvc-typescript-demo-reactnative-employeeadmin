@@ -58,7 +58,7 @@ export function useUserForm() {
 
     try {
       if (roles) user.roles = roles;
-      await userService.save(user, signal);
+      user.id === 0 ? await userService.save(user, signal) : await userService.update(user, signal);
     } catch (e) {
       if ((e as Error).name !== "AbortError")
         setError(e instanceof Error ? e : new Error("Unknown error"));
@@ -67,20 +67,5 @@ export function useUserForm() {
     }
   }, []);
 
-  const update = useCallback(async (user: User, roles: Role[] | null, signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (roles) user.roles = roles;
-      await userService.update(user, signal);
-    } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { loading, error, departments, user, setUser, findAllDepartments, findById, save, update };
+  return { loading, error, departments, user, setUser, findAllDepartments, findById, save };
 }
