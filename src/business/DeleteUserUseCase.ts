@@ -6,7 +6,7 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import {IUserService} from "../domain/UserService";
+import {IUserService} from "../domain/service/IUserService";
 
 export const deleteUserUseCase = (service: IUserService) => {
   return {

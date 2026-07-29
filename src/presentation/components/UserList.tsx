@@ -13,8 +13,6 @@ import {RouteProp, useFocusEffect} from "@react-navigation/native";
 import {ParamList} from "../../Application";
 import {User} from "../../domain/model/User";
 import {useUserList} from "../UserListHooks";
-import {deleteUserUseCase} from "../../business/DeleteUserUseCase";
-import {userService} from "../../domain/UserService";
 
 interface Props {
   navigation: NativeStackNavigationProp<ParamList, "UserList">;
@@ -24,7 +22,7 @@ interface Props {
 const UserList: React.FC<Props> = ({navigation, route}) => {
 
   // State
-  const {loading, error, users, setUsers, findAll} = useUserList();
+  const {loading, error, users, setUsers, findAll, deleteById} = useUserList();
 
   // Effects
   useFocusEffect(
@@ -62,12 +60,11 @@ const UserList: React.FC<Props> = ({navigation, route}) => {
     ).current;
 
     const onDelete = async () => {
-      const success = await deleteUserUseCase(userService).execute(user.id);
-      if (success) setUsers((prev) => prev.filter((current) => current.id !== user.id));
+      await deleteById(user.id);
     }
 
     const onEdit = () => {
-      navigation.navigate("UserForm", {user: user});
+      navigation.navigate("UserForm", {id: user.id});
     }
 
     return (

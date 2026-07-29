@@ -6,13 +6,9 @@
 //  Your reuse is governed by the BSD 3-Clause License
 //
 
-import {Role} from "./model/Role";
-import {ApplicationConstants} from "../ApplicationConstants";
-
-export interface IRoleService {
-  findAll(signal?: AbortSignal): Promise<Role[]>;
-  findByUserId(id: number, signal?: AbortSignal): Promise<Role[]>;
-}
+import {Role} from "../../domain/model/Role";
+import {ApplicationConstants} from "../../ApplicationConstants";
+import {IRoleService} from "../../domain/service/IRoleService";
 
 export const roleService: IRoleService = {
 

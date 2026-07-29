@@ -16,15 +16,14 @@ import {FontAwesome5} from "@expo/vector-icons";
 import UserList from "./presentation/components/UserList";
 import UserForm from "./presentation/components/UserForm";
 import UserRole from "./presentation/components/UserRole";
-import {createDefaultUser} from "./domain/model/User";
 import {User} from "./domain/model/User";
 import {Role} from "./domain/model/Role";
 import {ContextProvider} from "./ApplicationContext";
 
 export type ParamList = {
   UserList: { user: User | null } | undefined;
-  UserForm: { user: User, roles?: Role[] };
-  UserRole: { user: User, roles?: Role[] | null };
+  UserForm: { id: number, roles?: Role[] };
+  UserRole: { id: number, roles?: Role[] | null };
 };
 
 const Stack = createNativeStackNavigator<ParamList>();
@@ -34,7 +33,7 @@ const Application: React.FC = () => {
   function options({navigation}: { navigation: NativeStackNavigationProp<ParamList, "UserList"> }) {
     // Handlers
     const onCreate = () => {
-      navigation.navigate("UserForm", {user: createDefaultUser()});
+      navigation.navigate("UserForm", {id: 0});
     };
 
     // UI Helpers

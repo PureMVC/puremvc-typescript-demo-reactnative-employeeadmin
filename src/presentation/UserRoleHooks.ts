@@ -12,13 +12,14 @@ import {useContextProvider} from "../ApplicationContext";
 
 export function useUserRole() {
 
+  // Dependencies
+  const {roleService} = useContextProvider();
+
   // State
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [data, setData] = useState<Role[]>([]);
-
-  const {roleService} = useContextProvider();
 
   // Hooks
   const findAll = useCallback(async (signal?: AbortSignal) => {
@@ -28,8 +29,8 @@ export function useUserRole() {
     try {
       setRoles(await roleService.findAll(signal));
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -42,8 +43,8 @@ export function useUserRole() {
     try {
       setData(await roleService.findByUserId(id, signal))
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }

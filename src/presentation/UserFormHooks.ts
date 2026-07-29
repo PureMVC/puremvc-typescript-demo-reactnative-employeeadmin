@@ -14,13 +14,14 @@ import {useContextProvider} from "../ApplicationContext";
 
 export function useUserForm() {
 
+  // Dependencies
+  const {userService} = useContextProvider();
+
   // State
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [user, setUser] = useState<User>(createDefaultUser());
-
-  const {userService} = useContextProvider();
 
   // Hooks
   const findAllDepartments = useCallback(async (signal?: AbortSignal) => {
@@ -30,8 +31,8 @@ export function useUserForm() {
     try {
       setDepartments(await userService.findAllDepartments(signal))
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -45,8 +46,8 @@ export function useUserForm() {
       const result = await userService.findById(id, signal);
       if (result) setUser(result);
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -60,8 +61,8 @@ export function useUserForm() {
       if (roles) user.roles = roles;
       await userService.save(user, signal);
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -75,8 +76,8 @@ export function useUserForm() {
       if (roles) user.roles = roles;
       await userService.update(user, signal);
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError(e instanceof Error ? e : new Error("Unknown error"));
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
     } finally {
       setLoading(false);
     }

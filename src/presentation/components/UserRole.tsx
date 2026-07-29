@@ -35,7 +35,7 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
       if (route.params.roles && route.params.roles.length !== 0)
         return setData(route.params.roles);
 
-      await findByUserId(route.params.user.id, controller.signal);
+      await findByUserId(route.params.id, controller.signal);
     })();
 
     return () => controller.abort();
@@ -53,11 +53,11 @@ const UserRole: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onSave = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: data});
+    navigation.popTo("UserForm", {id: route.params.id, roles: data});
   }
 
   const onCancel = () => {
-    navigation.popTo("UserForm", {user: route.params.user, roles: route.params.roles ?? []});
+    navigation.popTo("UserForm", {id: route.params.id, roles: route.params.roles ?? []});
   }
 
   // UI Helpers

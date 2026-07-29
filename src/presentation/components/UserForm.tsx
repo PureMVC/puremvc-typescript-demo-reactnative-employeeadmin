@@ -42,10 +42,9 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
       await findAllDepartments(controller.signal)
       if (controller.signal.aborted) return;
 
-      const {id} = route.params.user;
-      if (id === 0) return;
+      if (route.params.id === 0) return;
 
-      await findById(id, controller.signal);
+      await findById(route.params.id, controller.signal);
       if (controller.signal.aborted) return;
     })();
 
@@ -80,7 +79,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
   }
 
   const onRoles = () => {
-    navigation.navigate("UserRole", {user: user, roles: roles});
+    navigation.navigate("UserRole", {id: user.id, roles: roles});
   }
 
   const onSave = async () => {
@@ -174,7 +173,7 @@ const UserForm: React.FC<Props> = ({navigation, route}) => {
 
   const Save = () => (
     <TouchableOpacity style={[styles.button, styles.save]} onPress={onSave}>
-      <Text style={styles.buttonText}>{route.params.user.id ? "UPDATE" : "SAVE"}</Text>
+      <Text style={styles.buttonText}>{route.params.id ? "UPDATE" : "SAVE"}</Text>
     </TouchableOpacity>
   );
 

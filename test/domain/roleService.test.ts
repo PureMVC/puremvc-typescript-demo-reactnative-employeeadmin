@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { roleService } from "../../src/domain/RoleService";
+import { roleService } from "../../src/infrastructure/service/RoleService";
 
 describe("roleService integration", () => {
   it("findAll should fetch roles from real API", async () => {
