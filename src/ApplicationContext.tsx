@@ -9,15 +9,18 @@
 import React, { createContext, useContext } from "react";
 import {userService} from "./infrastructure/service/UserService";
 import {roleService} from "./infrastructure/service/RoleService";
+import {deleteUserUseCase} from "./business/DeleteUserUseCase";
 
 export interface IContext {
   userService: typeof userService;
   roleService: typeof roleService;
+  deleteUserUseCase: typeof deleteUserUseCase;
 }
 
 const context: IContext = {
   userService,
   roleService,
+  deleteUserUseCase
 };
 
 const Context = createContext<IContext | null>(null);

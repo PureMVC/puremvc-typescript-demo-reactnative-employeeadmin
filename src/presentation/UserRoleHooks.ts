@@ -12,13 +12,14 @@ import {useContextProvider} from "../ApplicationContext";
 
 export function useUserRole() {
 
+  // Dependencies
+  const {roleService} = useContextProvider();
+
   // State
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [data, setData] = useState<Role[]>([]);
-
-  const {roleService} = useContextProvider();
 
   // Hooks
   const findAll = useCallback(async (signal?: AbortSignal) => {

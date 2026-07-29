@@ -12,12 +12,13 @@ import {useContextProvider} from "../ApplicationContext";
 
 export function useUserList() {
 
+  // Dependencies
+  const {userService, deleteUserUseCase} = useContextProvider();
+
   // State
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-
-  const {userService} = useContextProvider();
 
   // Hooks
   const findAll = useCallback(async (signal?: AbortSignal) => {
@@ -34,5 +35,20 @@ export function useUserList() {
     }
   }, [userService]);
 
-  return {loading, error, users, setUsers, findAll};
+  const deleteById = useCallback(async (id: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const success = await deleteUserUseCase(userService).execute(id);
+      if (success) setUsers((prev) => prev.filter((current) => current.id !== id));
+    } catch (e) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setError(e instanceof Error ? e : new Error("Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  }, [userService]);
+
+  return {loading, error, users, setUsers, findAll, deleteById};
 }

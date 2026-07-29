@@ -14,13 +14,14 @@ import {useContextProvider} from "../ApplicationContext";
 
 export function useUserForm() {
 
+  // Dependencies
+  const {userService} = useContextProvider();
+
   // State
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [user, setUser] = useState<User>(createDefaultUser());
-
-  const {userService} = useContextProvider();
 
   // Hooks
   const findAllDepartments = useCallback(async (signal?: AbortSignal) => {
